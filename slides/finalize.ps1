@@ -11,6 +11,13 @@ $WITH_PREVIOUS = 2
 $AFTER_PREVIOUS = 3
 
 $app = New-Object -ComObject PowerPoint.Application
+# 사용자가 이미 PowerPoint를 쓰고 있으면 같은 창에 붙는다 → 그때는 PowerPoint를 끄지 않는다
+$userHadOpen = $app.Presentations.Count -gt 0
+# 결과 파일이 PowerPoint에 열려 있으면 덮어쓸 수 없으니 멈춘다 (사용자 작업 보호)
+foreach ($p in $app.Presentations) {
+    if ($p.FullName -ieq $Out) { throw "결과 파일이 PowerPoint에 열려 있습니다. 닫은 뒤 다시 실행하세요: $Out" }
+}
+$pres = $null
 try {
     $pres = $app.Presentations.Open($Draft, $true, $false, $false)
     foreach ($slide in $pres.Slides) {
@@ -35,9 +42,9 @@ try {
     }
     # 25 = ppSaveAsDefault? 사용하지 않음. 24 = ppSaveAsOpenXMLPresentation, -1 = 글꼴 포함
     $pres.SaveAs($Out, 24, -1)
-    $pres.Close()
     "saved $Out"
 } finally {
-    $app.Quit()
+    if ($pres) { $pres.Close() }          # 내가 연 파일만 닫는다
+    if (-not $userHadOpen) { $app.Quit() } # 원래 PowerPoint가 꺼져 있었을 때만 종료
     [System.Runtime.InteropServices.Marshal]::ReleaseComObject($app) | Out-Null
 }

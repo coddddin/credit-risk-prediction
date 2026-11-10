@@ -203,8 +203,50 @@ SCRIPTS = {
         "그려 보니 사용 비율, 부채 비율, 소득은 막대 하나에 몰려 있었습니다. "
         "로그 변환을 하자 부채 비율의 왜도가 95에서 1.7로 줄며 분포가 펴졌습니다. 연체 횟수는 96, 98 코드 때문에 여전히 치우쳐 있었습니다."),
     8: ("Lab 2 · 발견·결론", 23,
-        "결정트리는 어떤 변환에도 AUC 0.59 그대로였고, 정확도는 기준선보다 낮았습니다. "
-        "반면 로지스틱 회귀는 로그와 표준화로 0.82까지 올랐습니다. 그래서 회귀와 MLP에는 이 데이터를 씁니다. 그럼 변수 8개가 다 필요할까요?"),
+        "변환의 효과는 모델에 따라 정반대였습니다. 로그와 표준화는 로지스틱 회귀만 0.82로 올렸고, "
+        "0과 1로 바꾸는 Binarizer는 결정트리만 0.78로 올렸습니다. 그래서 회귀와 MLP에는 로그와 표준화를 씁니다. 그럼 변수 8개가 다 필요할까요?"),
+}
+
+# ---------------- 예상 질문 (교수님은 PPT만 보고 질문) ----------------
+QA = {
+    2: [("왜 정확도가 아니라 AUC를 주 지표로 보나?",
+         "연체가 6.7%뿐이라 전부 정상이라고 해도 정확도가 93%다. AUC는 연체자를 정상 고객보다 더 위험하게 줄 세우는 능력이라 "
+         "불균형 데이터에서도 의미가 있고, Kaggle 대회의 공식 지표도 AUC다."),
+        ("'연체 이력(통합)', '대출 보유(통합)'은 무엇인가?",
+         "원본 Kaggle의 60–89일·90일 이상 연체 횟수, 대출·부동산 대출 수를 NOTE 논문에서 합쳐 0/1로 만든 변수다.")],
+    3: [("header=0은 왜 넣었나?",
+         "Lab 자료는 헤더 없는 CSV 기준이다. 이 파일은 첫 줄이 열 이름이라 그대로 읽으면 769행이 되고 모든 열이 문자열이 된다."),
+        ("중복 행은 처리했나?",
+         "완전히 같은 행 1,222개를 확인만 하고 지우지 않았다. 서로 다른 고객이 같은 값을 가질 수 있어서다.")],
+    4: [("6638, 6746이 결측을 채운 값이라는 근거는?",
+         "두 값이 합계 29,737행으로 원본 Kaggle 데이터의 소득 결측 수(29,731)와 거의 같고, 그중 27,904행은 부채 비율도 1을 넘는다."),
+        ("96, 98은 무엇인가?",
+         "연체 횟수로는 나올 수 없는 값(269행)이라 원본 데이터의 특수 코드로 보인다. 이후 단계에서 따로 처리한다.")],
+    5: [("Pearson과 Spearman의 차이는?",
+         "Pearson은 값 그대로의 직선 관계라 극단값에 크게 흔들리고, Spearman은 값을 순위로 바꿔 계산해 극단값 영향이 적다."),
+        ("상관이 높으면 중요한 변수인가?",
+         "함께 움직인다는 뜻일 뿐 원인은 아니다(Lecture 5 상관 vs 인과). 모델에서의 중요도는 Lab 3 특성 선택으로 확인한다.")],
+    6: [("로그 변환은 Lab에 없는데 왜 했나?",
+         "Lab 1 (e) '치우친 분포를 어떻게 바로잡나'의 답이고, Lab 2 본문이 여러 변환(view)을 만들어 시험해 보라고 권한다. "
+         "log1p는 0도 변환할 수 있다."),
+        ("왜 로지스틱 회귀로도 비교했나?",
+         "Lab 2 p.8의 '변환은 회귀·신경망처럼 가중치를 쓰는 모델에 유용하다'를 확인하고, Lab 6 MLP에 넣을 데이터를 정하기 위해서다."),
+        ("산점도를 5,000건만 그려도 되나?",
+         "무작위 추출(random_state=7)이고 경향을 눈으로 보는 용도라 충분하다. 모델 학습과 평가는 15만 건 전체로 했다.")],
+    7: [("로그 후 소득 왜도가 음수(-4.9)가 된 이유는?",
+         "소득 0원인 1,634행이 로그 후에도 0으로 남아 왼쪽에 꼬리가 생겼기 때문이다."),
+        ("부채 비율 그림의 두 번째 봉우리는?",
+         "소득이 비어 있던 고객의 부채 '금액'이다. Lab 1에서 찾은 27,904행과 같은 집단이다.")],
+    8: [("결정트리는 왜 변환에 영향을 받지 않나?",
+         "트리는 '값이 기준보다 큰가'로만 나눈다. 단위를 바꾸거나 로그를 씌워도 값의 순서가 같아 결과가 같다."),
+        ("결정트리 정확도가 기준선보다 낮은 이유는?",
+         "가지 수를 제한하지 않아 학습 데이터를 외운 것으로 보인다(과적합). 깊이 제한과 앙상블은 Lab 4–5에서 다룬다."),
+        ("Binarizer는 왜 트리에만 좋았나?",
+         "값이 0/1로 단순해져 트리가 외울 세부가 줄었기 때문으로 보인다. 회귀는 크기 정보를 잃어 약간 낮아졌다(0.787 → 0.778)."),
+        ("변환을 교차검증 전에 전체 데이터에 맞춘 건 데이터 누수 아닌가?",
+         "Lab 2 방식 그대로 했다. 평균·표준편차만 쓰는 변환이라 영향은 작지만, Lab 5에서 Pipeline으로 학습 fold 안에서만 맞추도록 바로잡는다."),
+        ("Normalizer는 왜 낮나?",
+         "행마다 길이를 1로 맞추면 값이 큰 소득이 길이를 거의 다 차지해 다른 정보가 사라진다. 희소 데이터용 방법이다.")],
 }
 # 전체 장 시간 배분 (합계 420초). 아직 만들지 않은 장은 대본 파일에 '작성 예정'으로 표시된다.
 FULL_PLAN = [("표지", 10), ("문제 정의", 25)] \
@@ -225,8 +267,10 @@ def notes(s, extra):
     if no in SCRIPTS:
         name, sec, short = SCRIPTS[no]
         RECORDS.append((no, name, sec, short, extra))
+        qa = "".join(f"\nQ. {q}\nA. {a}\n" for q, a in QA.get(no, []))
         s.notes_slide.notes_text_frame.text = (
-            f"[대본 · 목표 {sec}초 / 예상 {speak_seconds(short)}초]\n{short}\n\n[보충 · 질문 대비]\n{extra}")
+            f"[대본 · 목표 {sec}초 / 예상 {speak_seconds(short)}초]\n{short}\n\n[보충 설명]\n{extra}"
+            + (f"\n\n[예상 질문]{qa}" if qa else ""))
     else:
         s.notes_slide.notes_text_frame.text = extra
 
@@ -249,7 +293,13 @@ def write_script_md(path):
     lines += ["## 대본", ""]
     for no, name, sec, short, extra in RECORDS:
         lines += [f"### {no}. {name}  ·  {sec}초", "", short, "",
-                  "<details><summary>보충 · 질문 대비</summary>", "", extra, "", "</details>", ""]
+                  "<details><summary>보충 설명</summary>", "", extra, "", "</details>", ""]
+    lines += ["## 예상 질문", "", "교수님은 PPT만 보고 질문하신다. 장표에 적힌 숫자와 용어 위주로 정리했다.", ""]
+    for no, name, *_ in RECORDS:
+        if QA.get(no):
+            lines += [f"### {no}. {name}", ""]
+            for q, a in QA[no]:
+                lines += [f"**Q. {q}**", "", f"A. {a}", ""]
     Path(path).write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -358,8 +408,20 @@ def stage_track(s, active, x_right=12.53, seg=0.98, gap=0.06):
              color=C["blue"] if on else C["mute"], weight="bold" if on else "medium")
 
 
-def lab_header(s, lab, part, chapter, title):
-    """part: 1=코드, 2=결과, 3=발견·결론"""
+def term_line(s, terms, y=1.62):
+    """제목 아래 용어 풀이 한 줄. terms: [(용어, 쉬운 풀이)]"""
+    pieces = [("용어  ", {"color": C["violet"], "weight": "bold"})]
+    for i, (t, d) in enumerate(terms):
+        if i:
+            pieces.append(("   ·   ", {"color": C["line"]}))
+        pieces += [(t, {"color": C["ink"], "weight": "semibold"}), (f" {d}", {"color": C["mute"]})]
+    text(s, 0.8, y, 11.8, 0.3, [pieces], size=12, weight="medium", name="!!terms")
+
+
+def lab_header(s, lab, part, chapter, title, terms=None):
+    """part: 1=코드, 2=결과, 3=발견·결론. terms: 제목 아래 용어 풀이."""
+    if terms:
+        term_line(s, terms)
     stage_track(s, LAB_STAGES[lab])
     text(s, 0.8, 0.55, 5.4, 0.35,
          [[(f"Lab {lab}", {"color": C["blue"], "weight": "bold"}),
@@ -471,7 +533,8 @@ notes(s, """사용한 데이터는 Kaggle의 Give Me Some Credit으로, 15만 �
 # Lab 1 - (1) 코드
 # =====================================================================
 s = new_slide()
-lab_header(s, 1, 1, "데이터 로딩 · 기술통계", "Lab 1의 순서 그대로, 15만 건을 불러와 살펴봤다")
+lab_header(s, 1, 1, "데이터 로딩 · 기술통계", "Lab 1의 순서 그대로, 15만 건을 불러와 살펴봤다",
+           terms=[("기술통계", "평균·최댓값 등 요약"), ("상관", "함께 움직이는 정도"), ("왜도", "한쪽 쏠림 정도(0이면 대칭)")])
 
 # Lab 1 자료의 진행 순서 (스테퍼)
 steps = [("불러오기", "read_csv", "header=0 추가"), ("미리보기", "head(20)", "아래 표"),
@@ -535,12 +598,12 @@ group(s, tparts, "anim3_head")
 # 같은 순서로 실습한 실행 결과
 cmd = lambda code, note: [(">>> ", "in"), (code.ljust(38), "out"), (f"# {note}", "dim")]
 console(s, 6.62, 3.7, 5.91, 3.35, "실행 결과 · 01_lab1_loading_stats.ipynb", [
-    cmd("data.shape", "3 크기"), [("(150000, 9)", "hi")],
-    cmd("data.dtypes.value_counts()", "4 자료형"), [("int64 7  ·  float64 2", "hi")],
-    cmd("data.describe().loc['max']", "5 기술통계"), [("revol 50708  ·  debt 329664  ·  income 3008750", "hi")],
-    cmd("data.groupby('target').size()", "6 클래스"), [("0  139974  ·  1  ", "hi"), ("10026", "red")],
-    cmd("data.corr()['target'][1:].nlargest(2)", "7 상관"), [("defaulted 0.314  ·  late30 0.126", "hi")],
-    cmd("data.skew().nlargest(3)", "7 왜도"), [("income 127.4  ·  revol 97.6  ·  debt 95.2", "hi")],
+    cmd("data.shape", "3 행·열 개수"), [("(150000, 9)", "hi")],
+    cmd("data.dtypes.value_counts()", "4 모두 숫자인지"), [("int64 7  ·  float64 2", "hi")],
+    cmd("data.describe().loc['max']", "5 열별 최댓값"), [("revol 50708  ·  debt 329664  ·  income 3008750", "hi")],
+    cmd("data.groupby('target').size()", "6 정상/연체 수"), [("0  139974  ·  1  ", "hi"), ("10026", "red")],
+    cmd("data.corr()['target'][1:].nlargest(2)", "7 연체와 관계"), [("defaulted 0.314  ·  late30 0.126", "hi")],
+    cmd("data.skew().nlargest(3)", "7 쏠림 큰 열"), [("income 127.4  ·  revol 97.6  ·  debt 95.2", "hi")],
 ], size=11, anim=4, lh=15.5)
 notes(s, """Lab 1 자료는 데이터를 불러와서 미리보기, 크기, 자료형, 기술통계, 클래스 분포, 상관관계와 왜도 순서로 살펴봅니다.
 저는 이 일곱 단계를 그대로 실제 신용 데이터에 적용했습니다. 위쪽 칸마다 실제로 나온 결과를 적었습니다.
@@ -552,7 +615,8 @@ Lab 자료는 헤더가 없는 파일을 기준으로 해서, 이 데이터에�
 # Lab 1 - (2) 결과
 # =====================================================================
 s = new_slide()
-lab_header(s, 1, 2, "데이터 로딩 · 기술통계", "연체 고객은 6.7%뿐, 데이터 곳곳엔 극단값이 숨어 있다")
+lab_header(s, 1, 2, "데이터 로딩 · 기술통계", "연체 고객은 6.7%뿐, 데이터 곳곳엔 극단값이 숨어 있다",
+           terms=[("기준선", "전부 '정상'이라고 찍었을 때의 성적"), ("극단값", "다른 값보다 지나치게 크거나 나올 수 없는 값")])
 parts = [rect(s, 0.8, 2.15, 5.3, 4.9, C["card"], radius=0.25),
          text(s, 1.2, 2.45, 4.6, 0.4, "연체 고객 비율", size=16, color=C["sub"], weight="semibold"),
          text(s, 1.2, 2.8, 4.7, 1.5, [[("6.7", {}), ("%", {"size": 46})]], size=100, color=C["red"],
@@ -620,7 +684,9 @@ fig.savefig(CHART / "lab1_corr.png", dpi=220, facecolor=C["card"])
 plt.close(fig)
 
 s = new_slide()
-lab_header(s, 1, 3, "데이터 로딩 · 기술통계", "극단값이 '사용 비율'과 연체의 관계를 가리고 있었다")
+lab_header(s, 1, 3, "데이터 로딩 · 기술통계", "극단값이 '사용 비율'과 연체의 관계를 가리고 있었다",
+           terms=[("Pearson", "값 그대로 본 관계"), ("Spearman", "순위로 본 관계"),
+                  ("AUC", "연체자 구별 점수(0.5 찍기 ~ 1 완벽)")])
 group(s, [rect(s, 0.8, 2.15, 6.0, 4.05, C["card"], radius=0.25),
           text(s, 1.1, 2.33, 5.4, 0.35, [[("연체와의 상관계수  ", {"weight": "bold", "color": C["ink"]}),
                                          ("사용 비율: -0.002 → 0.24", {"color": C["red"], "weight": "bold"})]], size=13),
@@ -650,7 +716,9 @@ notes(s, """마지막으로 상관관계입니다. 회색이 일반 상관계수
 # Lab 2 - (1) 진행 : Lab 2 자료의 순서 + 실제 데이터 실습
 # =====================================================================
 s = new_slide()
-lab_header(s, 2, 1, "시각화 · 데이터 준비", "Lab 2의 순서대로 그려 보고, 네 가지 방법으로 바꿔 봤다")
+lab_header(s, 2, 1, "시각화 · 데이터 준비", "Lab 2의 순서대로 그려 보고, 네 가지 방법으로 바꿔 봤다",
+           terms=[("MinMax·표준화", "열마다 단위 맞추기"), ("Normalizer", "행마다 길이를 1로"),
+                  ("Binarizer", "0/1로 바꾸기"), ("로그", "자릿수로 보기")])
 steps = [("히스토그램", "hist()", "3개 변수 쏠림"), ("밀도", "kind='density'", "꼬리 긴 분포"),
          ("박스플롯", "kind='box'", "이상치 다수"), ("상관행렬", "matshow", "최대 0.22"),
          ("산점도 행렬", "scatter_matrix", "5,000건 샘플"), ("변환 4종", "MinMaxScaler 등", "+ 로그 변환"),
@@ -678,13 +746,13 @@ group(s, [rect(s, 0.8, 3.7 + hc + 0.14, 5.2, 7.05 - (3.7 + hc + 0.14), C["violet
                size=13, anchor="m", line=1.35)], "anim3_quote")
 cmd = lambda code, note: [(">>> ", "in"), (code.ljust(38), "out"), (f"# {note}", "dim")]
 console(s, 6.2, 3.7, 6.33, 3.35, "실행 결과 · 02_lab2_preparing_data.ipynb", [
-    cmd("X[0]", "6 원본 1행"), [("[0.766  45  2  0.803  9120  2  1  1]", "hi")],
-    cmd("StandardScaler().fit_transform(X)[0]", "표준화"),
+    cmd("X[0]", "6 원본 첫 행"), [("[0.766  45  2  0.803  9120  2  1  1]", "hi")],
+    cmd("StandardScaler().fit_transform(X)[0]", "단위 맞춤"),
     [("[-0.02 -0.49 0.38 -0.17 0.19 1.14 1.99 0.59]", "hi")],
-    cmd("Normalizer().fit_transform(X)[0]", "행 정규화"),
+    cmd("Normalizer().fit_transform(X)[0]", "행 길이 1"),
     [("[0.  0.005  0.  0.  1.  0.  0.  0. ]", "red"), ("  ← 소득이 독차지", "dim")],
-    cmd("log1p(X).skew()  # revol, debt", "로그 변환"), [("97.6 → 11.7  ·  95.2 → 1.7", "hi")],
-    cmd("cross_val_score(DecisionTree, ...)", "7 도전 과제"),
+    cmd("log1p(X).skew()  # revol, debt", "쏠림 변화"), [("97.6 → 11.7  ·  95.2 → 1.7", "hi")],
+    cmd("cross_val_score(DecisionTree, ...)", "7 정확도 비교"),
     [("원본 0.8938  ·  Normalizer 0.8940", "hi"), ("  ← 기준선 0.933보다 낮음", "dim")],
 ], size=11, anim=4, lh=15.5)
 notes(s, """Lab 2는 단변량 시각화인 히스토그램, 밀도, 박스플롯, 다변량 시각화인 상관행렬과 산점도 행렬을 그린 뒤,
@@ -698,7 +766,8 @@ Normalizer는 행마다 길이를 1로 맞추는데, 소득 값이 커서 한 �
 # Lab 2 - (2) 결과 : 실제 데이터 시각화
 # =====================================================================
 s = new_slide()
-lab_header(s, 2, 2, "시각화 · 데이터 준비", "그려 보니 세 변수가 한쪽에 몰려 있었고, 로그 변환으로 펴졌다")
+lab_header(s, 2, 2, "시각화 · 데이터 준비", "그려 보니 세 변수가 한쪽에 몰려 있었고, 로그 변환으로 펴졌다",
+           terms=[("왜도", "한쪽 쏠림 정도(0이면 대칭)"), ("log1p", "log(1+x) · 0도 변환 가능")])
 group(s, [rect(s, 0.8, 2.15, 5.75, 4.9, C["card"], radius=0.25),
           text(s, 1.1, 2.32, 5.2, 0.35, [[("실제 데이터  ", {"color": C["red"], "weight": "bold"}),
                                          ("data.hist(bins=50) · 15만 건", {"color": C["mute"]})]], size=12, weight="medium"),
@@ -732,15 +801,17 @@ notes(s, """왼쪽은 실제 데이터의 히스토그램입니다. 사용 비�
 # Lab 2 - (3) 발견 · 결론
 # =====================================================================
 s = new_slide()
-lab_header(s, 2, 3, "시각화 · 데이터 준비", "변환의 효과는 모델에 따라 정반대였다")
+lab_header(s, 2, 3, "시각화 · 데이터 준비", "로그+표준화는 회귀만, Binarizer는 트리만 성능을 올렸다",
+           terms=[("AUC", "연체자 구별 점수(0.5 찍기 ~ 1 완벽)"), ("10-fold", "10등분해 10번 시험"),
+                  ("과적합", "학습 데이터를 외워 새 데이터에 약함")])
 group(s, [rect(s, 0.8, 2.15, 6.0, 4.05, C["card"], radius=0.25),
           text(s, 1.1, 2.33, 5.4, 0.35, [[("변환별 AUC  ", {"weight": "bold", "color": C["ink"]}),
                                          ("10-fold · 결정트리 vs 로지스틱 회귀", {"color": C["mute"]})]], size=13),
           s.shapes.add_picture(str(FIG / "lab2_auc_by_view.png"), Inches(1.0), Inches(2.8), width=Inches(5.6))],
       "anim1_chart")
-finds = [("01", "결정트리는 변환해도 0.59 그대로", "정확도 89.4% < 기준선 93.3% · 과적합", C["red"]),
-         ("02", "로지스틱 회귀는 0.787 → 0.824", "표준화 0.802 · 로그+표준화 0.824", C["blue"]),
-         ("03", "Normalizer는 0.522로 붕괴", "행 정규화 → 소득 하나가 값을 독차지", C["blue"])]
+finds = [("01", "결정트리: Binarizer만 0.59 → 0.78", "나머지 변환은 0.59 그대로 · 정확도 89.4% < 기준선 93.3%", C["red"]),
+         ("02", "로지스틱 회귀: 0.787 → 0.824", "표준화 0.802 · 로그+표준화 0.824 · Binarizer는 0.778", C["blue"]),
+         ("03", "Normalizer: 0.522로 하락 (찍기 수준)", "행 길이를 1로 맞추면 소득이 값 대부분을 차지", C["blue"])]
 parts = []
 for i, (no, head, body, col) in enumerate(finds):
     yy = 2.15 + i * 0.72
