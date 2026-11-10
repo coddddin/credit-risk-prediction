@@ -196,10 +196,20 @@ SCRIPTS = {
     5: ("Lab 1 · 발견·결론", 23,
         "사용 비율은 일반 상관계수로는 연체와 무관해 보이지만, 순위로 보면 세 번째로 중요합니다. 극단값이 관계를 가린 겁니다. "
         "그래서 평가는 정확도가 아닌 AUC로 하고, 모델에 넣기 전에 극단값부터 처리해야 합니다. 그럼 이 값들, 어떻게 바꿔야 할까요?"),
+    6: ("Lab 2 · 진행", 15,
+        "Lab 2 순서대로 히스토그램부터 산점도 행렬까지 그리고, 네 가지 변환을 적용했습니다. "
+        "15만 개 점은 겹쳐 보이지 않아 산점도는 5천 건만 뽑았습니다."),
+    7: ("Lab 2 · 결과", 20,
+        "그려 보니 사용 비율, 부채 비율, 소득은 막대 하나에 몰려 있었습니다. "
+        "로그 변환을 하자 부채 비율의 왜도가 95에서 1.7로 줄며 분포가 펴졌습니다. 연체 횟수는 96, 98 코드 때문에 여전히 치우쳐 있었습니다."),
+    8: ("Lab 2 · 발견·결론", 23,
+        "결정트리는 어떤 변환에도 AUC 0.59 그대로였고, 정확도는 기준선보다 낮았습니다. "
+        "반면 로지스틱 회귀는 로그와 표준화로 0.82까지 올랐습니다. 그래서 회귀와 MLP에는 이 데이터를 씁니다. 그럼 변수 8개가 다 필요할까요?"),
 }
-# 아직 만들지 않은 장의 시간 배분 (합계 420초)
-PLANNED = [(f"Lab {n} · {part}", sec) for n in range(2, 7) for part, sec in (("진행", 15), ("결과", 20), ("발견·결론", 23))] \
-          + [("최종 결론", 35)]
+# 전체 장 시간 배분 (합계 420초). 아직 만들지 않은 장은 대본 파일에 '작성 예정'으로 표시된다.
+FULL_PLAN = [("표지", 10), ("문제 정의", 25)] \
+    + [(f"Lab {n} · {part}", sec) for n in range(1, 7) for part, sec in (("진행", 15), ("결과", 20), ("발견·결론", 23))] \
+    + [("최종 결론", 35)]
 RECORDS = []
 
 
@@ -222,6 +232,7 @@ def notes(s, extra):
 
 
 def write_script_md(path):
+    PLANNED = FULL_PLAN[len(RECORDS):]
     done = sum(r[2] for r in RECORDS)
     plan = sum(p[1] for p in PLANNED)
     lines = ["# 발표 대본 (7분)", "",
@@ -316,17 +327,18 @@ def console(s, x, y, w, h, title, rows, size=12.5, anim=None, lh=18):
     return group(s, parts, f"anim{anim}_console" if anim else "console")
 
 
-def capture_card(s, x, y, w, img, label, anim=None):
-    """Lab PDF 원본 캡처 카드."""
+def capture_card(s, x, y, w, img, label, anim=None, img_w=None):
+    """Lab PDF 원본 캡처 카드. img_w: 이미지 너비(인치, 기본은 카드의 90%)."""
     from PIL import Image
     iw, ih = Image.open(img).size
-    ph = w * 0.9 * ih / iw
+    img_w = img_w or w * 0.9
+    ph = img_w * ih / iw
     h = ph + 0.64
     parts = [rect(s, x, y, w, h, C["card"], radius=0.18),
              text(s, x + 0.25, y + 0.14, w - 0.5, 0.3,
                   [[("Lab 자료  ", {"color": C["blue"], "weight": "bold"}), (label, {"color": C["mute"]})]],
                   size=12, weight="medium")]
-    pic = s.shapes.add_picture(str(img), Inches(x + w * 0.05), Inches(y + 0.5), width=Inches(w * 0.9))
+    pic = s.shapes.add_picture(str(img), Inches(x + 0.25), Inches(y + 0.5), width=Inches(img_w))
     parts.append(pic)
     group(s, parts, f"anim{anim}_capture" if anim else "capture")
     return h
@@ -633,6 +645,121 @@ notes(s, """마지막으로 상관관계입니다. 회색이 일반 상관계수
 극단값 몇 개가 관계를 가리고 있었다는 뜻입니다.
 연체 예측이라는 목표로 보면 결론은 두 가지입니다. 첫째, 이 모델은 정확도가 아니라 연체 고객을 얼마나 잘 골라내는지, 즉 AUC로 평가해야 합니다. 지금 기준선은 0.5입니다. 둘째, 사용 비율 같은 핵심 신호를 모델이 쓰게 하려면 극단값부터 처리해야 합니다.
 그래서 다음 질문은, 이 값들을 그대로 써도 되는가입니다.""")
+
+# =====================================================================
+# Lab 2 - (1) 진행 : Lab 2 자료의 순서 + 실제 데이터 실습
+# =====================================================================
+s = new_slide()
+lab_header(s, 2, 1, "시각화 · 데이터 준비", "Lab 2의 순서대로 그려 보고, 네 가지 방법으로 바꿔 봤다")
+steps = [("히스토그램", "hist()", "3개 변수 쏠림"), ("밀도", "kind='density'", "꼬리 긴 분포"),
+         ("박스플롯", "kind='box'", "이상치 다수"), ("상관행렬", "matshow", "최대 0.22"),
+         ("산점도 행렬", "scatter_matrix", "5,000건 샘플"), ("변환 4종", "MinMaxScaler 등", "+ 로그 변환"),
+         ("원본 vs 변환", "DecisionTree", "정확도 89.4%")]
+parts = [text(s, 0.8, 1.98, 11.7, 0.3, [[("Lab 2 자료의 진행 순서", {"weight": "bold"}),
+                                         ("   → 실제 데이터에 같은 순서로 실습한 결과", {"color": C["mute"], "weight": "medium"})]],
+              size=13)]
+for i, (ko, fn, res) in enumerate(steps):
+    x = 0.8 + i * (sw + gap)
+    parts += [rect(s, x, 2.35, sw, 1.18, C["blue_pale"], radius=0.16),
+              oval(s, x + 0.15, 2.47, 0.3, C["blue"]),
+              text(s, x + 0.15, 2.47, 0.3, 0.3, str(i + 1), size=11, color="#FFFFFF", weight="bold", align="c", anchor="m"),
+              text(s, x + 0.52, 2.47, sw - 0.6, 0.3, ko, size=13 if len(ko) < 6 else 12, weight="bold", anchor="m"),
+              text(s, x + 0.15, 2.84, sw - 0.25, 0.25, fn, size=10.5, color=C["blue"], weight="medium", latin=MONO),
+              rect(s, x + 0.12, 3.14, sw - 0.24, 0.3, C["bg"], radius=0.08),
+              text(s, x + 0.12, 3.14, sw - 0.24, 0.3, res, size=10.5, color=C["ink"], weight="semibold", align="c",
+                   anchor="m")]
+group(s, parts, "anim1_steps")
+hc = capture_card(s, 0.8, 3.7, 5.2, CAP / "lab2_challenge.png", "p.11 · 7 도전 과제 (o)", anim=2, img_w=4.4)
+group(s, [rect(s, 0.8, 3.7 + hc + 0.14, 5.2, 7.05 - (3.7 + hc + 0.14), C["violet_pale"], radius=0.18),
+          text(s, 1.05, 3.7 + hc + 0.14, 4.8, 7.05 - (3.7 + hc + 0.14),
+               [[("Lab 2 p.8  ", {"color": C["violet"], "weight": "bold"}),
+                 ("변환은 회귀·신경망처럼 가중치를 쓰는 모델에 유용하다", {"color": C["ink"], "weight": "semibold"})],
+                [("→ 결정트리와 함께 로지스틱 회귀로도 확인", {"color": C["sub"], "weight": "medium"})]],
+               size=13, anchor="m", line=1.35)], "anim3_quote")
+cmd = lambda code, note: [(">>> ", "in"), (code.ljust(38), "out"), (f"# {note}", "dim")]
+console(s, 6.2, 3.7, 6.33, 3.35, "실행 결과 · 02_lab2_preparing_data.ipynb", [
+    cmd("X[0]", "6 원본 1행"), [("[0.766  45  2  0.803  9120  2  1  1]", "hi")],
+    cmd("StandardScaler().fit_transform(X)[0]", "표준화"),
+    [("[-0.02 -0.49 0.38 -0.17 0.19 1.14 1.99 0.59]", "hi")],
+    cmd("Normalizer().fit_transform(X)[0]", "행 정규화"),
+    [("[0.  0.005  0.  0.  1.  0.  0.  0. ]", "red"), ("  ← 소득이 독차지", "dim")],
+    cmd("log1p(X).skew()  # revol, debt", "로그 변환"), [("97.6 → 11.7  ·  95.2 → 1.7", "hi")],
+    cmd("cross_val_score(DecisionTree, ...)", "7 도전 과제"),
+    [("원본 0.8938  ·  Normalizer 0.8940", "hi"), ("  ← 기준선 0.933보다 낮음", "dim")],
+], size=11, anim=4, lh=15.5)
+notes(s, """Lab 2는 단변량 시각화인 히스토그램, 밀도, 박스플롯, 다변량 시각화인 상관행렬과 산점도 행렬을 그린 뒤,
+MinMax, Standard, Normalizer, Binarizer 네 가지 변환을 적용하고, 원본과 변환 데이터에 결정트리를 돌려 비교하는 순서입니다.
+같은 순서로 실제 데이터에 적용했습니다. 15만 개 점으로 산점도 행렬을 그리면 점이 겹쳐 보이지 않아 5천 건을 무작위로 뽑았습니다.
+Lab 1에서 찾은 치우친 분포를 바로잡기 위해 로그 변환 버전을 하나 더 만들었고, Lab 2 본문에서 변환이 회귀와 신경망에 유용하다고 한 것을 확인하려고 로지스틱 회귀로도 비교했습니다.
+Normalizer는 행마다 길이를 1로 맞추는데, 소득 값이 커서 한 행의 길이를 거의 소득이 차지합니다.
+도전 과제의 결정트리 정확도는 원본 89.4%, Normalizer 89.4%로 거의 같았고, 둘 다 모두 정상이라고 찍는 기준선 93.3%보다 낮았습니다.""")
+
+# =====================================================================
+# Lab 2 - (2) 결과 : 실제 데이터 시각화
+# =====================================================================
+s = new_slide()
+lab_header(s, 2, 2, "시각화 · 데이터 준비", "그려 보니 세 변수가 한쪽에 몰려 있었고, 로그 변환으로 펴졌다")
+group(s, [rect(s, 0.8, 2.15, 5.75, 4.9, C["card"], radius=0.25),
+          text(s, 1.1, 2.32, 5.2, 0.35, [[("실제 데이터  ", {"color": C["red"], "weight": "bold"}),
+                                         ("data.hist(bins=50) · 15만 건", {"color": C["mute"]})]], size=12, weight="medium"),
+          s.shapes.add_picture(str(FIG / "lab2_hist.png"), Inches(1.0), Inches(2.75), width=Inches(5.35))],
+      "anim1_hist")
+group(s, [rect(s, 6.8, 2.15, 5.73, 3.25, C["card"], radius=0.25),
+          text(s, 7.1, 2.32, 5.2, 0.35, [[("로그 변환 전후  ", {"weight": "bold"}),
+                                         ("회색 원본 → 파랑 log1p", {"color": C["mute"]})]], size=12, weight="medium"),
+          s.shapes.add_picture(str(FIG / "lab2_log_before_after.png"), Inches(7.0), Inches(2.72), width=Inches(5.35))],
+      "anim2_log")
+skew_items = [("사용 비율", "97.6", "11.7", C["blue"]), ("부채 비율", "95.2", "1.7", C["blue"]),
+              ("소득", "127.4", "-4.9", C["blue"]), ("30–59일 연체", "22.6", "4.3", C["red"])]
+parts = [text(s, 6.8, 5.55, 5.7, 0.3, [[("왜도 변화  ", {"weight": "bold"}), ("0에 가까울수록 대칭", {"color": C["mute"]})]],
+              size=12, weight="medium")]
+for i, (nm, a, b, col) in enumerate(skew_items):
+    x = 6.8 + i * 1.45
+    parts += [rect(s, x, 5.92, 1.37, 1.13, C["red_pale"] if col == C["red"] else C["blue_pale"], radius=0.16),
+              text(s, x + 0.12, 6.0, 1.15, 0.3, nm, size=11, color=C["sub"], weight="semibold"),
+              text(s, x + 0.12, 6.32, 1.2, 0.35, [[(a, {"color": C["mute"], "size": 12}), (" → ", {"color": C["mute"], "size": 12}),
+                                                  (b, {"color": col})]], size=17, weight="extrabold"),
+              text(s, x + 0.12, 6.7, 1.2, 0.3, "96·98로 아직 큼" if col == C["red"] else "펴짐", size=10,
+                   color=col, weight="semibold")]
+group(s, parts, "anim3_skew")
+notes(s, """왼쪽은 실제 데이터의 히스토그램입니다. 사용 비율, 부채 비율, 소득은 극단값 때문에 가로축이 수만에서 수백만까지 늘어나, 거의 모든 값이 막대 하나에 몰렸습니다.
+박스플롯에서도 이 세 변수는 상자가 납작하고 이상치 점만 길게 늘어섰습니다.
+오른쪽은 이 세 변수에 log1p, 즉 log(1+x)를 적용한 전후입니다. 부채 비율의 왜도는 95.2에서 1.7로 줄어 거의 대칭이 됐고, 사용 비율도 97.6에서 11.7로 줄었습니다.
+로그를 씌운 부채 비율 그림 오른쪽의 두 번째 봉우리는, Lab 1에서 찾은 소득을 채운 고객들의 부채 금액이 그림으로 드러난 것입니다.
+30–59일 연체 횟수도 22.6에서 4.3으로 줄었지만, 96, 98이라는 특수 코드 때문에 여전히 가장 치우친 변수로 남았습니다. 이 값은 따로 처리해야 합니다.""")
+
+# =====================================================================
+# Lab 2 - (3) 발견 · 결론
+# =====================================================================
+s = new_slide()
+lab_header(s, 2, 3, "시각화 · 데이터 준비", "변환의 효과는 모델에 따라 정반대였다")
+group(s, [rect(s, 0.8, 2.15, 6.0, 4.05, C["card"], radius=0.25),
+          text(s, 1.1, 2.33, 5.4, 0.35, [[("변환별 AUC  ", {"weight": "bold", "color": C["ink"]}),
+                                         ("10-fold · 결정트리 vs 로지스틱 회귀", {"color": C["mute"]})]], size=13),
+          s.shapes.add_picture(str(FIG / "lab2_auc_by_view.png"), Inches(1.0), Inches(2.8), width=Inches(5.6))],
+      "anim1_chart")
+finds = [("01", "결정트리는 변환해도 0.59 그대로", "정확도 89.4% < 기준선 93.3% · 과적합", C["red"]),
+         ("02", "로지스틱 회귀는 0.787 → 0.824", "표준화 0.802 · 로그+표준화 0.824", C["blue"]),
+         ("03", "Normalizer는 0.522로 붕괴", "행 정규화 → 소득 하나가 값을 독차지", C["blue"])]
+parts = []
+for i, (no, head, body, col) in enumerate(finds):
+    yy = 2.15 + i * 0.72
+    parts += [text(s, 7.1, yy, 0.6, 0.4, no, size=17, color=col, weight="extrabold"),
+              text(s, 7.65, yy, 4.9, 0.4, head, size=16, weight="bold"),
+              text(s, 7.65, yy + 0.34, 4.9, 0.35, body, size=12.5, color=C["sub"], weight="medium")]
+group(s, parts, "anim2_finds")
+conclusion_card(s, 7.05, 4.4, 5.48, 1.8, [
+    [("① ", {"color": C["violet"], "weight": "bold"}), ("회귀·MLP에는 로그+표준화 데이터를 쓴다", {})],
+    [("② ", {"color": C["violet"], "weight": "bold"}), ("트리 계열은 변환보다 과적합을 잡아야 한다", {})],
+], anim=3)
+next_bar(s, "변수 8개가 다 필요할까? 평가는 믿을 만할까?", "Lab 3", "최고 AUC", "0.824", anim=4)
+notes(s, """변환별로 10-fold AUC를 비교했습니다. 회색이 결정트리, 파란색이 로지스틱 회귀입니다.
+결정트리는 값의 순서만 보고 나누기 때문에 MinMax, 표준화, 로그 변환을 해도 AUC 0.59로 그대로였습니다. 오히려 Binarizer는 0과 1로 단순해져 과적합이 줄면서 0.78이 나왔습니다.
+정확도 89.4%는 모두 정상이라고 찍는 93.3%보다 낮아, 가지를 끝까지 뻗은 트리가 학습 데이터를 외운 과적합으로 보입니다.
+로지스틱 회귀는 원본 0.787에서 표준화 0.802, 로그와 표준화 0.824로 올랐습니다. Lab 2 본문대로 가중치를 쓰는 모델에는 변환이 효과가 있습니다.
+Normalizer는 0.522로 거의 무작위 수준이 됐습니다. 희소 데이터용 방법이라 이 데이터에는 맞지 않습니다.
+목표 관점의 결론은, 회귀와 이후 MLP에는 로그와 표준화를 거친 데이터를 쓰고, 트리 계열은 변환보다 과적합 조절이 과제라는 것입니다.
+다음 질문은, 변수 8개가 정말 다 필요한지, 그리고 지금처럼 하는 평가가 믿을 만한지입니다.""")
 
 prs.save(DRAFT)
 print("saved", DRAFT)
