@@ -7,13 +7,13 @@ LAB_DIR = Path(r"C:\Users\heeju\Desktop\ALGORYITHM\수업 자료")
 OUT_DIR = Path(__file__).resolve().parent.parent / "figures" / "lab_captures"
 
 
-def capture(pdf_name, page_no, start_text, end_text, out_name, zoom=3.0, pad=8, mark=None):
+def capture(pdf_name, page_no, start_text, end_text, out_name, zoom=3.0, pad=8, mark=None, nth=0):
     """page_no 쪽에서 start_text 줄부터 그 아래 처음 나오는 end_text 줄까지 잘라 저장.
     mark: 이 글자가 있는 줄에 빨간 테두리를 그린다 (우리가 고친 줄 표시)."""
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     doc = pymupdf.open(LAB_DIR / pdf_name)
     page = doc[page_no]
-    start = page.search_for(start_text)[0]
+    start = page.search_for(start_text)[nth]  # nth: 같은 문구가 여러 번 나올 때 몇 번째인지
     ends = [r for r in page.search_for(end_text) if r.y0 >= start.y0]
     end = ends[0]
     region = pymupdf.Rect(start.x0 - pad, start.y0 - pad, page.rect.width, end.y1 + pad)
@@ -44,3 +44,6 @@ if __name__ == "__main__":
     print(capture(lab2, 1, "# Univariate Histograms", "pyplot.show()", "lab2_hist.png"))
     print(capture(lab2, 7, "# Rescale data", "print(rescaledX[0:5,:])", "lab2_rescale.png"))
     print(capture(lab2, 10, "# Decision tree classification", 'print("Mean estimated accuracy', "lab2_challenge.png", pad=3))
+    lab3 = "Lab3_Feature Selection and Resampling Soln.pdf"
+    print(capture(lab3, 2, "# feature extraction", 'print("Feature Ranking', "lab3_rfe.png", nth=1, pad=1))
+    print(capture(lab3, 5, "num_folds = 10", 'print("Accuracy', "lab3_kfold.png", pad=1))

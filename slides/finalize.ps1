@@ -6,6 +6,20 @@ param(
     [string]$Draft = (Join-Path $PSScriptRoot "_draft.pptx"),
     [string]$Out = (Join-Path $PSScriptRoot "credit_presentation.pptx")
 )
+# Pretendard를 이 세션에 불러온다 (내 계정 글꼴은 세션에 따라 인식이 안 될 때가 있음)
+# 글꼴이 안 보이는 상태로 저장하면 PPT에 Pretendard가 포함되지 않고 기본 글꼴로 바뀐다.
+if (-not ('Win32.FontLoader' -as [type])) {
+    Add-Type -Namespace Win32 -Name FontLoader -MemberDefinition @'
+[DllImport("gdi32.dll", CharSet=CharSet.Unicode)] public static extern int AddFontResource(string lpFileName);
+[DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam, uint fuFlags, uint uTimeout, out IntPtr lpdwResult);
+'@
+}
+foreach ($f in Get-ChildItem "$env:LOCALAPPDATA\Microsoft\Windows\Fonts" -Filter 'Pretendard-*.ttf') {
+    [Win32.FontLoader]::AddFontResource($f.FullName) | Out-Null
+}
+$r = [IntPtr]::Zero
+[Win32.FontLoader]::SendMessageTimeout([IntPtr]0xffff, 0x001D, [IntPtr]::Zero, [IntPtr]::Zero, 2, 3000, [ref]$r) | Out-Null
+
 $ASCEND = 39            # 떠오르기: 페이드 + 위로 살짝 이동
 $WITH_PREVIOUS = 2
 $AFTER_PREVIOUS = 3

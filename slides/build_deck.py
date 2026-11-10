@@ -205,6 +205,15 @@ SCRIPTS = {
     8: ("Lab 2 · 발견·결론", 23,
         "변환의 효과는 모델에 따라 정반대였습니다. 로그와 표준화는 로지스틱 회귀만 0.82로 올렸고, "
         "0과 1로 바꾸는 Binarizer는 결정트리만 0.78로 올렸습니다. 그래서 회귀와 MLP에는 로그와 표준화를 씁니다. 그럼 변수 8개가 다 필요할까요?"),
+    9: ("Lab 3 · 진행", 15,
+        "Lab 3의 특성 선택 네 가지와 검증 방법 네 가지를 그대로 적용했습니다. "
+        "LOOCV는 15만 번 학습에 약 20시간이 걸려, 시간만 재고 천 건 표본으로 확인했습니다."),
+    10: ("Lab 3 · 결과", 20,
+         "방법마다 고른 변수가 달랐습니다. 통계 검정은 값이 큰 소득을, 트리는 범위가 넓은 변수를 우대했습니다. "
+         "세 방법이 모두 고른 건 사용 비율과 나이였고, 변수를 줄여도 AUC가 거의 오르지 않아 8개를 모두 쓰기로 했습니다."),
+    11: ("Lab 3 · 발견·결론", 23,
+         "시험을 한 번만 나누면 나누는 방식에 따라 AUC가 0.816에서 0.828까지 흔들렸습니다. 10-fold는 0.824에 흔들림 0.01 이내로 안정적이었습니다. "
+         "그래서 이후 비교는 연체 비율을 맞춘 층화 10-fold AUC로 통일합니다. 그럼 어떤 알고리즘이 가장 잘 골라낼까요?"),
 }
 
 # ---------------- 예상 질문 (교수님은 PPT만 보고 질문) ----------------
@@ -247,6 +256,26 @@ QA = {
          "Lab 2 방식 그대로 했다. 평균·표준편차만 쓰는 변환이라 영향은 작지만, Lab 5에서 Pipeline으로 학습 fold 안에서만 맞추도록 바로잡는다."),
         ("Normalizer는 왜 낮나?",
          "행마다 길이를 1로 맞추면 값이 큰 소득이 길이를 거의 다 차지해 다른 정보가 사라진다. 희소 데이터용 방법이다.")],
+    9: [("LOOCV를 15만 건 전체로 하지 않은 이유는?",
+         "측정해 보니 1회 학습 0.49초 × 15만 번 ≈ 20시간이고, 시험 데이터가 1명이라 AUC를 계산할 수 없다. 1,000건 표본으로 정확도만 확인했다(92.6%, 표준편차 26%)."),
+        ("RFE 결과가 원본과 로그+표준화에서 다른 이유는?",
+         "회귀 계수는 열의 단위에 따라 크기가 달라진다. 단위를 맞춰야 변수끼리 공정하게 비교된다.")],
+    10: [("카이제곱이 원본에서 소득을 1위로 뽑은 이유는?",
+          "카이제곱 점수는 값의 크기에 비례한다. 소득은 최대 300만이라 유리했고, 로그 변환 후에는 오히려 최하위다."),
+         ("트리 중요도는 어떻게 계산하나?",
+          "트리가 나눌 때 불순도(지니)가 줄어든 양을 변수별로 더해 100개 트리에서 평균한다. 값의 범위가 넓은 변수가 높게 나오는 경향이 있다."),
+         ("변수를 줄이지 않은 이유는?",
+          "상위 6개(0.826)와 8개(0.824)의 차이 0.002가 층화 10-fold 표준편차(약 0.009)보다 작아, 줄여서 얻는 이득이 우연과 구별되지 않는다."),
+         ("PCA를 쓰지 않은 이유는?",
+          "3개 성분으로 AUC가 0.822로 비슷했지만, 성분은 여러 변수를 섞은 값이라 '왜 연체 위험으로 봤는지' 설명하기 어렵다.")],
+    11: [("층화(Stratified)가 왜 필요한가?",
+          "연체가 6.68%뿐이라 일반 KFold는 fold마다 연체 비율이 6.45~7.18%로 달라진다. 층화하면 모든 fold가 6.68%로 같아진다."),
+         ("표준편차가 왜 중요한가?",
+          "데이터가 바뀌어도 비슷하게 맞히는지(안정성)를 보여 준다. 두 모델의 차이가 이 값보다 작으면 우연일 수 있다."),
+         ("ShuffleSplit의 흔들림이 가장 작은데 왜 기준으로 삼지 않았나?",
+          "시험 데이터가 33%로 커서 덜 흔들리지만, 회차끼리 같은 데이터가 겹친다. k-fold는 모든 데이터가 정확히 한 번씩 시험에 쓰인다."),
+         ("정확도는 왜 비교하지 않았나?",
+          "모든 방법에서 약 93.2%로 '전부 정상' 기준선과 같아 차이가 보이지 않는다.")],
 }
 # 전체 장 시간 배분 (합계 420초). 아직 만들지 않은 장은 대본 파일에 '작성 예정'으로 표시된다.
 FULL_PLAN = [("표지", 10), ("문제 정의", 25)] \
@@ -415,7 +444,12 @@ def term_line(s, terms, y=1.62):
         if i:
             pieces.append(("   ·   ", {"color": C["line"]}))
         pieces += [(t, {"color": C["ink"], "weight": "semibold"}), (f" {d}", {"color": C["mute"]})]
-    text(s, 0.8, y, 11.8, 0.3, [pieces], size=12, weight="medium", name="!!terms")
+    box = text(s, 0.8, y, 11.8, 0.3, [pieces], size=12, weight="medium", name="!!terms")
+    # 반투명 처리: 본문보다 한 단계 뒤로 물러나 보이게 (불투명도 55%)
+    for run in box.text_frame.paragraphs[0].runs:
+        clr = run.font.color._color._xClr  # a:srgbClr
+        alpha = clr.makeelement(qn("a:alpha"), {"val": "55000"})
+        clr.append(alpha)
 
 
 def lab_header(s, lab, part, chapter, title, terms=None):
@@ -831,6 +865,152 @@ notes(s, """변환별로 10-fold AUC를 비교했습니다. 회색이 결정트�
 Normalizer는 0.522로 거의 무작위 수준이 됐습니다. 희소 데이터용 방법이라 이 데이터에는 맞지 않습니다.
 목표 관점의 결론은, 회귀와 이후 MLP에는 로그와 표준화를 거친 데이터를 쓰고, 트리 계열은 변환보다 과적합 조절이 과제라는 것입니다.
 다음 질문은, 변수 8개가 정말 다 필요한지, 그리고 지금처럼 하는 평가가 믿을 만한지입니다.""")
+
+# =====================================================================
+# Lab 3 - (1) 진행 : 특성 선택 4가지 + 리샘플링 4가지
+# =====================================================================
+s = new_slide()
+lab_header(s, 3, 1, "특성 선택 · 리샘플링", "Lab 3의 특성 선택 4가지와 검증 방법 4가지를 모두 적용했다",
+           terms=[("특성 선택", "예측에 쓸 변수 고르기"), ("RFE", "하나씩 빼 보며 고르기"),
+                  ("PCA", "여러 변수를 소수 성분으로 압축"), ("LOOCV", "한 명씩 빼고 시험")])
+steps3 = [("통계 검정", "SelectKBest", "로그 후 late30 1위"), ("RFE", "RFE(LR, 3)", "revol·age 등 3개"),
+          ("PCA", "PCA(3)", "24·16·16%"), ("트리 중요도", "ExtraTrees", "debt·revol 상위"),
+          ("한 번 분할", "train_test_split", "AUC 0.823"), ("k-fold", "KFold(10)", "0.824 ± 0.007"),
+          ("LOOCV", "LeaveOneOut", "약 20시간"), ("반복 분할", "ShuffleSplit", "0.826 ± 0.004")]
+sw3, gap3 = 1.38, 0.098
+parts = [text(s, 0.8, 1.98, 11.7, 0.3, [[("Lab 3 자료의 진행 순서", {"weight": "bold"}),
+                                         ("   → 1–4 특성 선택 · 5–8 리샘플링, 실제 데이터 결과", {"color": C["mute"], "weight": "medium"})]],
+              size=13)]
+for i, (ko, fn, res) in enumerate(steps3):
+    x = 0.8 + i * (sw3 + gap3)
+    fill = C["blue_pale"] if i < 4 else C["violet_pale"]
+    dot = C["blue"] if i < 4 else C["violet"]
+    parts += [rect(s, x, 2.35, sw3, 1.18, fill, radius=0.16),
+              oval(s, x + 0.13, 2.47, 0.28, dot),
+              text(s, x + 0.13, 2.47, 0.28, 0.28, str(i + 1), size=10.5, color="#FFFFFF", weight="bold", align="c", anchor="m"),
+              text(s, x + 0.47, 2.47, sw3 - 0.5, 0.28, ko, size=11.5, weight="bold", anchor="m"),
+              text(s, x + 0.13, 2.84, sw3 - 0.2, 0.25, fn, size=9.5, color=dot, weight="medium", latin=MONO),
+              rect(s, x + 0.1, 3.14, sw3 - 0.2, 0.3, C["bg"], radius=0.08),
+              text(s, x + 0.1, 3.14, sw3 - 0.2, 0.3, res, size=10, color=C["ink"], weight="semibold", align="c", anchor="m")]
+group(s, parts, "anim1_steps")
+h3 = capture_card(s, 0.8, 3.7, 5.2, CAP / "lab3_rfe.png", "p.3 · 2 RFE", anim=2, img_w=3.3)
+capture_card(s, 0.8, 3.7 + h3 + 0.12, 5.2, CAP / "lab3_kfold.png", "p.6 · 6 k-fold 교차검증", anim=2, img_w=4.6)
+cmd = lambda code, note: [(">>> ", "in"), (code.ljust(38), "out"), (f"# {note}", "dim")]
+console(s, 6.2, 3.7, 6.33, 3.35, "실행 결과 · 03_lab3_feature_selection_resampling.ipynb", [
+    cmd("SelectKBest(chi2, k=4).fit(X, Y)", "1 원본"),
+    [("income · debt · late30 · defaulted", "hi"), ("  ← 값 큰 열 유리", "dim")],
+    cmd("SelectKBest(chi2, k=4).fit(logX, Y)", "1 로그 후"), [("late30 · defaulted · age · revol", "hi")],
+    cmd("RFE(LogisticRegression(), 3)", "2 하나씩 빼기"), [("revol · age · defaulted", "hi")],
+    cmd("PCA(3).explained_variance_ratio_", "3 압축"),
+    [("[0.24 0.16 0.16]", "hi"), ("   ← 원본은 소득이 97.5% 독점", "dim")],
+    cmd("ExtraTrees().feature_importances_", "4 트리 중요도"),
+    [("debt .26 · revol .25 · income .20 · age .12", "hi")],
+    cmd("LeaveOneOut()  # 15만 회 학습", "7 시간 측정"), [("1회 0.49초 × 150,000 ≈ 20시간", "red")],
+], size=10.5, anim=3, lh=15)
+notes(s, """Lab 3은 특성 선택 네 가지, 즉 단변량 통계 검정, RFE, PCA, 트리 중요도와, 리샘플링 네 가지, 즉 한 번 분할, k-fold, LOOCV, 반복 무작위 분할을 다룹니다.
+Lab 2의 결론대로 로그와 표준화를 한 데이터에 로지스틱 회귀를 기준 모델로 썼습니다.
+카이제곱 검정은 원본 데이터에서 소득을 1위로 뽑았는데, 점수가 값의 크기에 비례하기 때문입니다. 로그 변환 후에는 30–59일 연체, 연체 이력, 나이, 사용 비율 순이었습니다.
+LOOCV는 15만 번 학습해야 해서 한 번 학습 시간을 재어 보니 약 20시간이 걸려, 1,000건 표본으로만 실행했습니다.""")
+
+# =====================================================================
+# Lab 3 - (2) 결과 : 방법별로 고른 변수 + 줄였을 때 AUC
+# =====================================================================
+s = new_slide()
+lab_header(s, 3, 2, "특성 선택 · 리샘플링", "방법마다 고른 변수가 달랐고, 줄여도 AUC는 거의 그대로였다",
+           terms=[("AUC", "연체자 구별 점수(0.5 찍기 ~ 1 완벽)"), ("± 값", "10번 시험 점수의 흔들림(표준편차)")])
+rows_sel = [("사용 비율", "revol", 1, 1, 1), ("나이", "age", 1, 1, 1), ("연체 이력", "defaulted", 1, 1, 0),
+            ("30–59일 연체", "late30", 1, 0, 0), ("부채 비율", "debt", 0, 0, 1), ("소득", "income", 0, 0, 1),
+            ("부양가족", "depend", 0, 0, 0), ("대출 보유", "loans", 0, 0, 0)]
+methods = ["통계 검정\n(로그 후 상위4)", "RFE\n(상위 3)", "트리 중요도\n(상위 4)"]
+tparts = [rect(s, 0.8, 2.15, 5.75, 4.9, C["card"], radius=0.25),
+          text(s, 1.1, 2.32, 5.2, 0.35, [[("방법별로 고른 변수  ", {"weight": "bold"}), ("● = 선택됨", {"color": C["mute"]})]],
+               size=12, weight="medium")]
+tbl = s.shapes.add_table(len(rows_sel) + 1, 5, Inches(1.05), Inches(2.78), Inches(5.25), Inches(0.42 * 9)).table
+widths = [1.55, 1.15, 0.95, 1.05, 0.55]
+for j, w in enumerate(widths):
+    tbl.columns[j].width = Inches(w)
+header = ["변수", *methods, "합계"]
+for i in range(len(rows_sel) + 1):
+    tbl.rows[i].height = Inches(0.42 if i else 0.52)
+    for j in range(5):
+        cell = tbl.cell(i, j)
+        cell.margin_left = cell.margin_right = Inches(0.04)
+        cell.margin_top = cell.margin_bottom = Inches(0.02)
+        cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+        cell.fill.solid()
+        if i == 0:
+            cell.fill.fore_color.rgb = rgb(C["blue_pale"])
+            val, col, wt, sz = header[j], C["blue"], "bold", 10
+        else:
+            ko, en, a, b, c = rows_sel[i - 1]
+            total = a + b + c
+            cell.fill.fore_color.rgb = rgb(C["violet_pale"] if total == 3 else C["bg"])
+            if j == 0:
+                val, col, wt, sz = f"{ko}", C["ink"], "semibold", 11
+            elif j == 4:
+                val, col, wt, sz = str(total), C["violet"] if total == 3 else C["sub"], "bold", 12
+            else:
+                v = (a, b, c)[j - 1]
+                val, col, wt, sz = ("●" if v else "·"), C["blue"] if v else C["line"], "bold", 13
+        tf = cell.text_frame
+        lines_ = str(val).split("\n")
+        for k, ln in enumerate(lines_):
+            p = tf.paragraphs[0] if k == 0 else tf.add_paragraph()
+            p.alignment = PP_ALIGN.LEFT if (j == 0 and i > 0) else PP_ALIGN.CENTER
+            r = p.add_run()
+            r.text = ln
+            set_font(r, sz if k == 0 else 9, wt if k == 0 else "medium", col if k == 0 else C["mute"])
+tparts.append(s.shapes[-1])
+group(s, tparts, "anim1_table")
+group(s, [rect(s, 6.8, 2.15, 5.73, 3.55, C["card"], radius=0.25),
+          text(s, 7.1, 2.32, 5.2, 0.35, [[("변수 수별 AUC  ", {"weight": "bold"}),
+                                         ("트리 중요도 순서로 추가 · 층화 10-fold", {"color": C["mute"]})]], size=12, weight="medium"),
+          s.shapes.add_picture(str(FIG / "lab3_subset_auc.png"), Inches(7.0), Inches(2.75), width=Inches(5.35))],
+      "anim2_subset")
+group(s, [rect(s, 6.8, 5.85, 5.73, 1.2, C["blue_pale"], radius=0.2),
+          text(s, 7.1, 5.85, 5.2, 1.2,
+               [[("상위 6개 0.826  vs  8개 0.824", {"weight": "extrabold", "color": C["ink"], "size": 16})],
+                [("차이 0.002 < 흔들림 ±0.009 → ", {"color": C["sub"]}), ("8개 모두 사용", {"color": C["blue"], "weight": "bold"})]],
+               size=13, weight="medium", anchor="m", line=1.35)], "anim3_keep")
+notes(s, """왼쪽은 세 방법이 고른 변수입니다. 통계 검정은 로그 변환 후 상위 4개, RFE는 상위 3개, 트리 중요도는 상위 4개를 표시했습니다.
+세 방법 모두 고른 변수는 사용 비율과 나이, 두 방법이 고른 변수는 연체 이력입니다. 트리 중요도는 값의 범위가 넓은 부채 비율과 소득을 높게 쳤습니다.
+오른쪽은 트리 중요도 순서로 변수를 하나씩 더하며 층화 10-fold AUC를 잰 결과입니다. 상위 3–4개만 쓰면 0.75–0.78로 떨어지고, 5개부터 0.82대를 회복합니다.
+상위 6개가 0.826으로 8개의 0.824보다 0.002 높지만, 이 차이는 10번 시험의 흔들림 0.009보다 작아 의미 있는 차이로 보기 어렵습니다. 그래서 8개를 모두 쓰기로 했습니다.
+PCA 3개 성분도 0.822로 비슷했지만, 성분은 여러 변수를 섞은 값이라 설명이 어려워 쓰지 않았습니다.""")
+
+# =====================================================================
+# Lab 3 - (3) 발견 · 결론 : 리샘플링
+# =====================================================================
+s = new_slide()
+lab_header(s, 3, 3, "특성 선택 · 리샘플링", "시험을 한 번만 나누면 AUC가 0.816~0.828로 흔들렸다",
+           terms=[("k-fold", "10등분해 10번 시험"), ("층화", "모든 시험의 연체 비율을 6.68%로 고정"),
+                  ("표준편차", "점수가 흔들리는 정도")])
+group(s, [rect(s, 0.8, 2.15, 6.0, 4.05, C["card"], radius=0.25),
+          text(s, 1.1, 2.33, 5.4, 0.35, [[("검증 방법별 AUC  ", {"weight": "bold", "color": C["ink"]}),
+                                         ("점 하나 = 시험 한 번 · 선 = 평균", {"color": C["mute"]})]], size=13),
+          s.shapes.add_picture(str(FIG / "lab3_resampling.png"), Inches(1.0), Inches(2.8), width=Inches(5.6))],
+      "anim1_chart")
+finds = [("01", "한 번 분할: 0.816 ~ 0.828", "나누는 방식(seed)만 바꿔도 0.012 차이", C["red"]),
+         ("02", "10-fold: 0.824 ± 0.007", "층화하면 모든 시험의 연체 비율 6.68%", C["blue"]),
+         ("03", "LOOCV: 약 20시간 · AUC 계산 불가", "시험 데이터가 1명이라 순위를 매길 수 없음", C["blue"])]
+parts = []
+for i, (no, head, body, col) in enumerate(finds):
+    yy = 2.15 + i * 0.72
+    parts += [text(s, 7.1, yy, 0.6, 0.4, no, size=17, color=col, weight="extrabold"),
+              text(s, 7.65, yy, 4.9, 0.4, head, size=16, weight="bold"),
+              text(s, 7.65, yy + 0.34, 4.9, 0.35, body, size=12.5, color=C["sub"], weight="medium")]
+group(s, parts, "anim2_finds")
+conclusion_card(s, 7.05, 4.4, 5.48, 1.8, [
+    [("① ", {"color": C["violet"], "weight": "bold"}), ("이후 모든 비교는 층화 10-fold AUC로 통일", {})],
+    [("② ", {"color": C["violet"], "weight": "bold"}), ("변수는 8개 모두 사용 (줄여도 이득 < 흔들림)", {})],
+], anim=3)
+next_bar(s, "어떤 알고리즘이 연체자를 가장 잘 골라낼까?", "Lab 4", "AUC", "0.824 ± 0.009", anim=4)
+notes(s, """검증 방법별로 나온 AUC를 점으로 찍었습니다. 점 하나가 시험 한 번, 가로선이 평균입니다.
+데이터를 한 번만 나누면, 나누는 방식만 바꿔도 AUC가 0.816에서 0.828까지 0.012나 흔들렸습니다. 이 정도면 모델 간 차이와 구별하기 어렵습니다.
+10-fold는 평균 0.824, 흔들림 0.007로 안정적이었고, 층화 10-fold는 모든 시험의 연체 비율을 6.68%로 맞춰 줍니다. 일반 KFold는 시험마다 연체 비율이 6.45%에서 7.18%로 달랐습니다.
+LOOCV는 약 20시간이 걸리고, 시험 데이터가 한 명뿐이라 AUC를 계산할 수 없었습니다.
+목표 관점의 결론은, 이후 모든 알고리즘 비교를 층화 10-fold AUC로 통일하고, 변수는 8개를 모두 쓴다는 것입니다.
+다음 질문은, 그럼 어떤 알고리즘이 연체자를 가장 잘 골라내는가입니다.""")
 
 prs.save(DRAFT)
 print("saved", DRAFT)
