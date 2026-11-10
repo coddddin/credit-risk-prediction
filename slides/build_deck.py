@@ -178,8 +178,68 @@ def group(s, shapes, name):
     return g
 
 
-def notes(s, script):
-    s.notes_slide.notes_text_frame.text = " ".join(script.split())
+# ---------------- 대본: 7분(420초)에 맞춘 짧은 대본 ----------------
+# 장 번호: (장 이름, 목표 초, 짧은 대본). 슬라이드 노트 맨 위와 slides/script.md 에 들어간다.
+# 노트 아래쪽에는 질문 대비용 '보충 설명'(notes() 에 넘긴 긴 대본)이 붙는다.
+SCRIPTS = {
+    1: ("표지", 10,
+        "Lab 1부터 6까지의 실습 방법을 그대로 따라가며, 신용위험 예측 문제를 풀어 본 과정을 발표하겠습니다."),
+    2: ("문제 정의", 25,
+        "데이터는 15만 명의 재무 정보가 담긴 Give Me Some Credit이고, 목표는 2년 안에 연체할지를 예측하는 이진 분류입니다. "
+        "진행은 Lecture 6의 AI 모델링 6단계를 따르고, 이 단계를 Lab 1부터 6까지 순서대로 밟아 가겠습니다."),
+    3: ("Lab 1 · 진행", 15,
+        "Lab 1의 일곱 단계를 그대로 실제 데이터에 적용했습니다. 15만 행 9열에 모두 숫자였고, "
+        "Lab과 달리 헤더 줄이 있어 header=0만 더했습니다."),
+    4: ("Lab 1 · 결과", 20,
+        "연체 고객은 6.7%뿐이라, 모두 정상이라고 찍어도 정확도가 93%입니다. "
+        "또 1을 넘는 비율, 빈 소득을 채운 값, 불가능한 연체 횟수 같은 이상값이 곳곳에 있었습니다."),
+    5: ("Lab 1 · 발견·결론", 23,
+        "사용 비율은 일반 상관계수로는 연체와 무관해 보이지만, 순위로 보면 세 번째로 중요합니다. 극단값이 관계를 가린 겁니다. "
+        "그래서 평가는 정확도가 아닌 AUC로 하고, 모델에 넣기 전에 극단값부터 처리해야 합니다. 그럼 이 값들, 어떻게 바꿔야 할까요?"),
+}
+# 아직 만들지 않은 장의 시간 배분 (합계 420초)
+PLANNED = [(f"Lab {n} · {part}", sec) for n in range(2, 7) for part, sec in (("진행", 15), ("결과", 20), ("발견·결론", 23))] \
+          + [("최종 결론", 35)]
+RECORDS = []
+
+
+def speak_seconds(script):
+    """한국어 발표 속도 약 초당 5글자(공백 제외)로 예상 시간 계산."""
+    return round(len(script.replace(" ", "")) / 5)
+
+
+def notes(s, extra):
+    """슬라이드 노트 = 짧은 대본(SCRIPTS) + 보충 설명(extra)."""
+    no = len(prs.slides)
+    extra = " ".join(extra.split())
+    if no in SCRIPTS:
+        name, sec, short = SCRIPTS[no]
+        RECORDS.append((no, name, sec, short, extra))
+        s.notes_slide.notes_text_frame.text = (
+            f"[대본 · 목표 {sec}초 / 예상 {speak_seconds(short)}초]\n{short}\n\n[보충 · 질문 대비]\n{extra}")
+    else:
+        s.notes_slide.notes_text_frame.text = extra
+
+
+def write_script_md(path):
+    done = sum(r[2] for r in RECORDS)
+    plan = sum(p[1] for p in PLANNED)
+    lines = ["# 발표 대본 (7분)", "",
+             "build_deck.py 를 실행하면 자동으로 다시 만들어진다. 고칠 때는 build_deck.py 의 SCRIPTS 를 수정한다.",
+             "예상 시간은 공백 제외 초당 약 5글자 기준이다. 실제로 소리 내어 읽으며 타이머로 확인할 것.", "",
+             "## 시간 배분", "",
+             "| 장 | 내용 | 목표 | 예상 |", "|---|---|---|---|"]
+    for no, name, sec, short, _ in RECORDS:
+        lines.append(f"| {no} | {name} | {sec}초 | {speak_seconds(short)}초 |")
+    for i, (name, sec) in enumerate(PLANNED, start=len(RECORDS) + 1):
+        lines.append(f"| {i} | {name} (작성 예정) | {sec}초 | - |")
+    lines += ["", f"**합계 목표 {done + plan}초 ({(done + plan) // 60}분 {(done + plan) % 60}초)**"
+                  f" · 작성된 장 {len(RECORDS)}개 = 목표 {done}초 / 예상 {sum(speak_seconds(r[3]) for r in RECORDS)}초", ""]
+    lines += ["## 대본", ""]
+    for no, name, sec, short, extra in RECORDS:
+        lines += [f"### {no}. {name}  ·  {sec}초", "", short, "",
+                  "<details><summary>보충 · 질문 대비</summary>", "", extra, "", "</details>", ""]
+    Path(path).write_text("\n".join(lines), encoding="utf-8")
 
 
 # ---------------- B 스타일 부품: 코드 창 / 실행 결과 창 ----------------
@@ -576,3 +636,5 @@ notes(s, """마지막으로 상관관계입니다. 회색이 일반 상관계수
 
 prs.save(DRAFT)
 print("saved", DRAFT)
+write_script_md(ROOT / "slides" / "script.md")
+print("saved", ROOT / "slides" / "script.md")
