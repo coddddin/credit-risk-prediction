@@ -1,6 +1,6 @@
 # 발표 자료 마무리: 이징 진입 애니메이션 추가 + Pretendard 포함 저장
 #   입력  slides/_draft.pptx   (build_deck.py 결과, 모핑 전환 포함)
-#   출력  slides/credit_presentation.pptx
+#   출력  slides/credit_presentation.pptx (+ 같은 이름의 .pdf)
 # 도형 이름이 "anim{n}_..." 인 것만 애니메이션을 넣는다. 같은 n은 함께(약간의 시차), n 순서대로 차례로.
 param(
     [string]$Draft = (Join-Path $PSScriptRoot "_draft.pptx"),
@@ -57,6 +57,10 @@ try {
     # 25 = ppSaveAsDefault? 사용하지 않음. 24 = ppSaveAsOpenXMLPresentation, -1 = 글꼴 포함
     $pres.SaveAs($Out, 24, -1)
     "saved $Out"
+    # 미리보기·공유용 PDF (글꼴이 들어 있어 어디서 열어도 같은 모양)
+    $pdf = [System.IO.Path]::ChangeExtension($Out, ".pdf")
+    $pres.SaveCopyAs($pdf, 32)           # 32 = ppSaveAsPDF
+    "saved $pdf"
 } finally {
     if ($pres) { $pres.Close() }          # 내가 연 파일만 닫는다
     if (-not $userHadOpen) { $app.Quit() } # 원래 PowerPoint가 꺼져 있었을 때만 종료
