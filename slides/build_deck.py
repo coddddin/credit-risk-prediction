@@ -402,41 +402,78 @@ s = new_slide()
 lab_header(s, 1, 1, "데이터 로딩 · 기술통계", "Lab 1의 순서 그대로, 15만 건을 불러와 살펴봤다")
 
 # Lab 1 자료의 진행 순서 (스테퍼)
-steps = [("불러오기", "read_csv"), ("미리보기", "head(20)"), ("크기", "shape"), ("자료형", "dtypes"),
-         ("기술통계", "describe()"), ("클래스 분포", "groupby"), ("상관 · 왜도", "corr · skew")]
+steps = [("불러오기", "read_csv", "header=0 추가"), ("미리보기", "head(20)", "아래 표"),
+         ("크기", "shape", "(150000, 9)"), ("자료형", "dtypes", "9열 모두 숫자"),
+         ("기술통계", "describe()", "revol 최대 50,708"), ("클래스 분포", "groupby", "연체 10,026명"),
+         ("상관 · 왜도", "corr · skew", "왜도 최대 127")]
 sw, gap = 1.57, 0.12
-parts = [text(s, 0.8, 2.05, 6, 0.3, [[("Lab 1 자료의 진행 순서", {"weight": "bold"}),
-                                      ("   이 데이터에 같은 순서로 적용", {"color": C["mute"], "weight": "medium"})]], size=13)]
-for i, (ko, fn) in enumerate(steps):
+parts = [text(s, 0.8, 1.98, 11.7, 0.3, [[("Lab 1 자료의 진행 순서", {"weight": "bold"}),
+                                         ("   → 실제 데이터에 같은 순서로 실습한 결과", {"color": C["mute"], "weight": "medium"})]],
+              size=13)]
+for i, (ko, fn, res) in enumerate(steps):
     x = 0.8 + i * (sw + gap)
-    parts += [rect(s, x, 2.45, sw, 0.95, C["blue_pale"], radius=0.16),
-              oval(s, x + 0.15, 2.58, 0.3, C["blue"]),
-              text(s, x + 0.15, 2.58, 0.3, 0.3, str(i + 1), size=11, color="#FFFFFF", weight="bold", align="c", anchor="m"),
-              text(s, x + 0.52, 2.58, sw - 0.6, 0.3, ko, size=13, weight="bold", anchor="m"),
-              text(s, x + 0.15, 3.0, sw - 0.25, 0.3, fn, size=11.5, color=C["blue"], weight="medium", latin=MONO)]
+    parts += [rect(s, x, 2.35, sw, 1.18, C["blue_pale"], radius=0.16),
+              oval(s, x + 0.15, 2.47, 0.3, C["blue"]),
+              text(s, x + 0.15, 2.47, 0.3, 0.3, str(i + 1), size=11, color="#FFFFFF", weight="bold", align="c", anchor="m"),
+              text(s, x + 0.52, 2.47, sw - 0.6, 0.3, ko, size=13, weight="bold", anchor="m"),
+              text(s, x + 0.15, 2.84, sw - 0.25, 0.25, fn, size=11, color=C["blue"], weight="medium", latin=MONO),
+              rect(s, x + 0.12, 3.14, sw - 0.24, 0.3, C["bg"], radius=0.08),
+              text(s, x + 0.12, 3.14, sw - 0.24, 0.3, res, size=10.5, color=C["ink"], weight="semibold", align="c",
+                   anchor="m")]
 group(s, parts, "anim1_steps")
 
 # 근거가 된 Lab 자료 캡처
-h1 = capture_card(s, 0.8, 3.62, 5.6, CAP / "lab1_read_csv.png", "p.4 · 1 CSV 불러오기", anim=2)
-capture_card(s, 0.8, 3.62 + h1 + 0.14, 5.6, CAP / "lab1_class_dist.png", "p.8 · 6 클래스 분포", anim=2)
+h1 = capture_card(s, 0.8, 3.7, 5.6, CAP / "lab1_read_csv.png", "p.4 · 1 불러오기 (Pima 데이터 예시)", anim=2)
 
-# 같은 순서로 작성한 코드
-code_window(s, 6.62, 3.62, 5.91, 3.2, "01_lab1_loading_stats.ipynb", '''
-# 1  CSV 불러오기 (Lab 1 p.4)
-data = read_csv(filename, names=names, header=0)
-# 2-4  미리보기 · 크기 · 자료형
-data.head(20);  data.shape;  data.dtypes
-# 5  기술통계
-data.describe()
-# 6  클래스 분포 (Lab 1 p.8)
-data.groupby('target').size()
-# 7  상관관계 · 왜도
-data.corr(method='pearson');  data.skew()
-''', size=12, anim=3, lh=17)
-text(s, 0.8, 6.98, 11.7, 0.3, "※ Lab 자료는 헤더 없는 파일 기준 → 이 데이터는 첫 줄이 열 이름이라 header=0만 추가",
-     size=11, color=C["mute"], weight="medium", name="anim3_footnote")
+# 실제 데이터 미리보기 (head)
+head = pd.read_csv(DATA, names=["target", "revol", "age", "late30", "debt", "income", "depend", "defaulted", "loans"],
+                   header=0).head(3)
+ty = 3.7 + h1 + 0.12
+tparts = [rect(s, 0.8, ty, 5.6, 7.05 - ty, C["card"], radius=0.18),
+          text(s, 1.05, ty + 0.12, 5.1, 0.3, [[("실제 데이터  ", {"color": C["red"], "weight": "bold"}),
+                                               ("data.head() · 15만 행 중 첫 3행", {"color": C["mute"]})]], size=12,
+               weight="medium")]
+cols = list(head.columns)
+cw = [0.5, 0.58, 0.4, 0.55, 0.58, 0.6, 0.6, 0.72, 0.5]  # 열 너비 (합 5.03in)
+tbl = s.shapes.add_table(len(head) + 1, len(cols), Inches(1.08), Inches(ty + 0.48), Inches(sum(cw)),
+                         Inches(0.22 * (len(head) + 1))).table
+for j, c in enumerate(cols):
+    tbl.columns[j].width = Inches(cw[j])
+for i in range(len(head) + 1):
+    tbl.rows[i].height = Inches(0.22)
+    for j, c in enumerate(cols):
+        cell = tbl.cell(i, j)
+        cell.margin_left = cell.margin_right = Inches(0.03)
+        cell.margin_top = cell.margin_bottom = Inches(0.01)
+        cell.fill.solid()
+        cell.fill.fore_color.rgb = rgb(C["blue_pale"] if i == 0 else C["bg"])
+        v = c if i == 0 else head.iloc[i - 1, j]
+        val = v if i == 0 else (f"{v:.3f}" if isinstance(v, float) else f"{v:,}")
+        p = cell.text_frame.paragraphs[0]
+        p.alignment = PP_ALIGN.CENTER
+        r = p.add_run()
+        r.text = str(val)
+        is_target = j == 0 and i > 0 and v == 1
+        set_font(r, 9.5, "bold" if (i == 0 or is_target) else "regular",
+                 C["blue"] if i == 0 else (C["red"] if is_target else C["ink"]), latin=MONO)
+tbl_frame = s.shapes[-1]
+tparts.append(tbl_frame)
+group(s, tparts, "anim3_head")
+
+# 같은 순서로 실습한 실행 결과
+cmd = lambda code, note: [(">>> ", "in"), (code.ljust(38), "out"), (f"# {note}", "dim")]
+console(s, 6.62, 3.7, 5.91, 3.35, "실행 결과 · 01_lab1_loading_stats.ipynb", [
+    cmd("data.shape", "3 크기"), [("(150000, 9)", "hi")],
+    cmd("data.dtypes.value_counts()", "4 자료형"), [("int64 7  ·  float64 2", "hi")],
+    cmd("data.describe().loc['max']", "5 기술통계"), [("revol 50708  ·  debt 329664  ·  income 3008750", "hi")],
+    cmd("data.groupby('target').size()", "6 클래스"), [("0  139974  ·  1  ", "hi"), ("10026", "red")],
+    cmd("data.corr()['target'][1:].nlargest(2)", "7 상관"), [("defaulted 0.314  ·  late30 0.126", "hi")],
+    cmd("data.skew().nlargest(3)", "7 왜도"), [("income 127.4  ·  revol 97.6  ·  debt 95.2", "hi")],
+], size=11, anim=4, lh=15.5)
 notes(s, """Lab 1 자료는 데이터를 불러와서 미리보기, 크기, 자료형, 기술통계, 클래스 분포, 상관관계와 왜도 순서로 살펴봅니다.
-저도 이 일곱 단계를 그대로 따라 15만 건의 신용 데이터를 살펴봤습니다. 왼쪽이 근거가 된 Lab 자료, 오른쪽이 같은 순서로 작성한 코드입니다.
+저는 이 일곱 단계를 그대로 실제 신용 데이터에 적용했습니다. 위쪽 칸마다 실제로 나온 결과를 적었습니다.
+15만 행 9열, 모든 열이 숫자이고, 기술통계에서 사용 비율 최댓값이 5만이 넘는 이상한 값이 보였습니다. 연체 고객은 1만 26명입니다.
+왼쪽 아래는 실제 데이터의 첫 다섯 행, 오른쪽은 각 단계의 실행 결과입니다.
 Lab 자료는 헤더가 없는 파일을 기준으로 해서, 이 데이터에는 header=0 하나만 더했습니다.""")
 
 # =====================================================================
@@ -458,22 +495,26 @@ parts = [rect(s, 0.8, 2.15, 5.3, 4.9, C["card"], radius=0.25),
                                          "→ 정확도로는 평가할 수 없다"], size=14, color=C["sub"], weight="medium",
               anchor="m", line=1.3)]
 group(s, parts, "anim1_stat")
-console(s, 6.35, 2.15, 6.18, 4.9, "실행 결과 · 01_lab1_loading_stats.ipynb", [
-    [(">>> ", "in"), ("data.groupby('target').size()", "out")],
-    [("0    139974", "out")], [("1     10026", "red"), ("     ← 6.68%", "dim")],
-    [("", "out")],
-    [(">>> ", "in"), ("(data.revol > 1).sum(), data.revol.max()", "out")],
-    [("(3321, ", "out"), ("50708.0", "hi"), (")      ← 비율인데 5만", "dim")],
+console(s, 6.35, 2.15, 6.18, 4.9, "describe에서 이상한 값 파고들기 · 실제 데이터", [
+    [("# 비율이어야 하는데 1을 넘는 값", "dim")],
+    [(">>> ", "in"), ("(data.revol > 1).sum()", "out")],
+    [("3321", "hi"), ("      ← 사용 비율 최대 50,708", "dim")],
     [(">>> ", "in"), ("(data.debt > 1).sum()", "out")],
     [("35137", "hi")],
-    [(">>> ", "in"), ("data.late30.isin([96, 98]).sum()", "out")],
-    [("269", "hi"), ("                  ← 불가능한 횟수", "dim")],
+    [("", "out")],
+    [("# 소득에 유난히 자주 나오는 값", "dim")],
     [(">>> ", "in"), ("data.income.value_counts().head(2)", "out")],
-    [("6638    16634", "hi")], [("6746    13103", "hi"), ("       ← 빈 소득을 채운 값", "dim")],
-], size=12.5, anim=2, lh=19)
+    [("6638 16634  ·  6746 13103", "hi"), ("  ← 채운 값", "dim")],
+    [(">>> ", "in"), ("(filled & (data.debt > 1)).sum()", "out")],
+    [("27904", "red"), ("      ← 부채 '금액'이 들어감", "dim")],
+    [("", "out")],
+    [(">>> ", "in"), ("data.late30.isin([96, 98]).sum()", "out")],
+    [("269", "hi"), ("        ← 불가능한 연체 횟수", "dim")],
+], size=12, anim=2, lh=18)
 notes(s, """결과입니다. 가장 큰 발견은 불균형입니다. 연체 고객은 1만 26명, 6.7%뿐이라 모두 정상이라고 찍어도 정확도가 93%가 나옵니다.
-오른쪽 실행 결과를 보면, 비율이어야 할 사용 비율이 최대 5만이 넘고, 부채 비율이 1을 넘는 행이 3만 5천 개입니다.
-연체 횟수에는 96, 98 같은 불가능한 값이 있고, 소득은 6638과 6746이 비정상적으로 많은데 빈 값을 채운 흔적으로 보입니다.""")
+오른쪽은 기술통계에서 이상해 보인 값을 실제 데이터로 파고든 결과입니다. 비율이어야 할 사용 비율과 부채 비율이 1을 넘는 행이 각각 3천여 개, 3만 5천 개였습니다.
+소득은 6638과 6746이 유난히 많은데, 이 행들 중 2만 7천여 개는 부채 비율도 1을 넘었습니다. 빈 소득을 채우면서 부채 비율 자리에 금액이 들어간 것으로 보입니다.
+연체 횟수에는 96, 98 같은 불가능한 값도 있었습니다.""")
 
 # =====================================================================
 # Lab 1 - (3) 발견 · 결론
