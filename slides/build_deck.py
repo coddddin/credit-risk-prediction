@@ -261,12 +261,12 @@ def capture_card(s, x, y, w, img, label, anim=None):
     from PIL import Image
     iw, ih = Image.open(img).size
     ph = w * 0.9 * ih / iw
-    h = ph + 0.75
+    h = ph + 0.64
     parts = [rect(s, x, y, w, h, C["card"], radius=0.18),
-             text(s, x + 0.25, y + 0.18, w - 0.5, 0.3,
-                  [[("Lab 원본  ", {"color": C["blue"], "weight": "bold"}), (label, {"color": C["mute"]})]],
+             text(s, x + 0.25, y + 0.14, w - 0.5, 0.3,
+                  [[("Lab 자료  ", {"color": C["blue"], "weight": "bold"}), (label, {"color": C["mute"]})]],
                   size=12, weight="medium")]
-    pic = s.shapes.add_picture(str(img), Inches(x + w * 0.05), Inches(y + 0.55), width=Inches(w * 0.9))
+    pic = s.shapes.add_picture(str(img), Inches(x + w * 0.05), Inches(y + 0.5), width=Inches(w * 0.9))
     parts.append(pic)
     group(s, parts, f"anim{anim}_capture" if anim else "capture")
     return h
@@ -399,34 +399,45 @@ notes(s, """사용한 데이터는 Kaggle의 Give Me Some Credit으로, 15만 �
 # Lab 1 - (1) 코드
 # =====================================================================
 s = new_slide()
-lab_header(s, 1, 1, "데이터 로딩 · 기술통계", "Lab 코드를 그대로 쓰면, 헤더 줄이 데이터로 섞인다")
-h1 = capture_card(s, 0.8, 2.15, 6.35, CAP / "lab1_read_csv.png", "PDF p.4 · Pandas로 불러오기", anim=1)
-capture_card(s, 0.8, 2.15 + h1 + 0.2, 6.35, CAP / "lab1_class_dist.png", "PDF p.8 · 클래스 분포", anim=2)
-code_window(s, 7.35, 2.15, 5.18, 3.55, "01_lab1_loading_stats.ipynb", '''
-names = ['target','revol','age','late30',
-         'debt','income','depend',
-         'defaulted','loans']
-data = read_csv(filename, names=names, header=0)
-X = loadtxt(filename, delimiter=',', skiprows=1)
-set_option('display.precision', 3)
+lab_header(s, 1, 1, "데이터 로딩 · 기술통계", "Lab 1의 순서 그대로, 15만 건을 불러와 살펴봤다")
 
-print(data.shape)        # (150000, 9)
-print(data.groupby('target').size())
-''', size=12, highlight=(3, 4, 5), anim=3)
-changes = [("header=0", "첫 줄을 헤더로"), ("skiprows=1", "NumPy도 동일"), ("precision", "최신 pandas 옵션")]
-parts = []
-for i, (k, v) in enumerate(changes):
-    x = 7.35 + i * 1.75
-    parts += [rect(s, x, 5.9, 1.68, 0.8, C["blue_pale"], radius=0.16),
-              text(s, x + 0.17, 5.97, 1.45, 0.35, k, size=12, color=C["blue"], weight="bold", latin=MONO),
-              text(s, x + 0.17, 6.31, 1.45, 0.35, v, size=12, color=C["sub"], weight="medium")]
-group(s, parts, "anim4_changes")
-text(s, 0.8, 6.0, 6.3, 0.75, [[("바꾼 점  ", {"weight": "bold", "color": C["ink"]}),
-                               ("Lab은 '헤더 없는 파일'이 전제 → 빨간 줄을 이 데이터에 맞게 수정", {"color": C["sub"]})]],
-     size=13.5, weight="medium", line=1.35, name="anim4_note")
-notes(s, """Lab 1은 CSV를 불러오는 것부터 시작합니다. 왼쪽이 Lab 원본 코드, 오른쪽이 제가 이 데이터에 맞게 고친 코드입니다.
-Lab 코드는 헤더가 없는 파일을 전제로 하는데, 이 데이터는 첫 줄이 열 이름이라 그대로 쓰면 첫 줄이 데이터로 섞이고 모든 열이 문자열이 됩니다.
-그래서 header=0, skiprows=1로 고쳤고, 최신 pandas에서 바뀐 옵션 이름도 맞췄습니다.""")
+# Lab 1 자료의 진행 순서 (스테퍼)
+steps = [("불러오기", "read_csv"), ("미리보기", "head(20)"), ("크기", "shape"), ("자료형", "dtypes"),
+         ("기술통계", "describe()"), ("클래스 분포", "groupby"), ("상관 · 왜도", "corr · skew")]
+sw, gap = 1.57, 0.12
+parts = [text(s, 0.8, 2.05, 6, 0.3, [[("Lab 1 자료의 진행 순서", {"weight": "bold"}),
+                                      ("   이 데이터에 같은 순서로 적용", {"color": C["mute"], "weight": "medium"})]], size=13)]
+for i, (ko, fn) in enumerate(steps):
+    x = 0.8 + i * (sw + gap)
+    parts += [rect(s, x, 2.45, sw, 0.95, C["blue_pale"], radius=0.16),
+              oval(s, x + 0.15, 2.58, 0.3, C["blue"]),
+              text(s, x + 0.15, 2.58, 0.3, 0.3, str(i + 1), size=11, color="#FFFFFF", weight="bold", align="c", anchor="m"),
+              text(s, x + 0.52, 2.58, sw - 0.6, 0.3, ko, size=13, weight="bold", anchor="m"),
+              text(s, x + 0.15, 3.0, sw - 0.25, 0.3, fn, size=11.5, color=C["blue"], weight="medium", latin=MONO)]
+group(s, parts, "anim1_steps")
+
+# 근거가 된 Lab 자료 캡처
+h1 = capture_card(s, 0.8, 3.62, 5.6, CAP / "lab1_read_csv.png", "p.4 · 1 CSV 불러오기", anim=2)
+capture_card(s, 0.8, 3.62 + h1 + 0.14, 5.6, CAP / "lab1_class_dist.png", "p.8 · 6 클래스 분포", anim=2)
+
+# 같은 순서로 작성한 코드
+code_window(s, 6.62, 3.62, 5.91, 3.2, "01_lab1_loading_stats.ipynb", '''
+# 1  CSV 불러오기 (Lab 1 p.4)
+data = read_csv(filename, names=names, header=0)
+# 2-4  미리보기 · 크기 · 자료형
+data.head(20);  data.shape;  data.dtypes
+# 5  기술통계
+data.describe()
+# 6  클래스 분포 (Lab 1 p.8)
+data.groupby('target').size()
+# 7  상관관계 · 왜도
+data.corr(method='pearson');  data.skew()
+''', size=12, anim=3, lh=17)
+text(s, 0.8, 6.98, 11.7, 0.3, "※ Lab 자료는 헤더 없는 파일 기준 → 이 데이터는 첫 줄이 열 이름이라 header=0만 추가",
+     size=11, color=C["mute"], weight="medium", name="anim3_footnote")
+notes(s, """Lab 1 자료는 데이터를 불러와서 미리보기, 크기, 자료형, 기술통계, 클래스 분포, 상관관계와 왜도 순서로 살펴봅니다.
+저도 이 일곱 단계를 그대로 따라 15만 건의 신용 데이터를 살펴봤습니다. 왼쪽이 근거가 된 Lab 자료, 오른쪽이 같은 순서로 작성한 코드입니다.
+Lab 자료는 헤더가 없는 파일을 기준으로 해서, 이 데이터에는 header=0 하나만 더했습니다.""")
 
 # =====================================================================
 # Lab 1 - (2) 결과

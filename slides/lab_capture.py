@@ -38,7 +38,5 @@ def capture(pdf_name, page_no, start_text, end_text, out_name, zoom=3.0, pad=8, 
 
 
 if __name__ == "__main__":
-    print(capture("Lab1_Loading ML Data.pdf", 3, "# Load CSV using Pandas", "print(data.shape)", "lab1_read_csv.png",
-                  mark="data = read_csv(filename"))
-    print(capture("Lab1_Loading ML Data.pdf", 7, "# Class Distribution", "print(class_counts)", "lab1_class_dist.png",
-                  mark="data = read_csv(filename"))
+    print(capture("Lab1_Loading ML Data.pdf", 3, "# Load CSV using Pandas", "print(data.shape)", "lab1_read_csv.png"))
+    print(capture("Lab1_Loading ML Data.pdf", 7, "# Class Distribution", "print(class_counts)", "lab1_class_dist.png"))
