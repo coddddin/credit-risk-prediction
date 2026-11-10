@@ -47,3 +47,6 @@ if __name__ == "__main__":
     lab3 = "Lab3_Feature Selection and Resampling Soln.pdf"
     print(capture(lab3, 2, "# feature extraction", 'print("Feature Ranking', "lab3_rfe.png", nth=1, pad=1))
     print(capture(lab3, 5, "num_folds = 10", 'print("Accuracy', "lab3_kfold.png", pad=1))
+    lab4 = "Lab4_Compare ML Algorithms Soln.pdf"
+    print(capture(lab4, 5, "seed = 7", "print(matrix)", "lab4_confusion.png", pad=1))
+    print(capture(lab4, 9, "# prepare models", "models.append(('SVM'", "lab4_compare.png", pad=1))
