@@ -50,3 +50,6 @@ if __name__ == "__main__":
     lab4 = "Lab4_Compare ML Algorithms Soln.pdf"
     print(capture(lab4, 5, "seed = 7", "print(matrix)", "lab4_confusion.png", pad=1))
     print(capture(lab4, 9, "# prepare models", "models.append(('SVM'", "lab4_compare.png", pad=1))
+    lab5 = "Lab5_Automating and Saving the Model Soln.pdf"
+    print(capture(lab5, 1, "# create pipeline", "model = Pipeline(estimators)", "lab5_pipeline.png", pad=1))
+    print(capture(lab5, 3, "num_trees = 100", "max_features=max_features)", "lab5_rf.png", nth=1, pad=1))

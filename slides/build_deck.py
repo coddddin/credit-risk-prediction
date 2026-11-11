@@ -223,6 +223,15 @@ SCRIPTS = {
     14: ("Lab 4 · 발견·결론", 23,
          "알고리즘 여섯 개 중 LDA가 0.832로 가장 높았고, 로지스틱 회귀와 나이브 베이즈가 뒤를 이었습니다. 트리는 과적합으로 0.6에 그쳤습니다. "
          "그래서 가중치를 기본으로 하고 선형 모델과 앙상블을 후보로 둡니다. 그런데 지금까지의 평가, 공정했을까요?"),
+    15: ("Lab 5 · 진행", 15,
+         "Lab 5 순서대로 파이프라인으로 누수를 막고, 앙상블 네 가지를 비교한 뒤, 튜닝한 모델을 저장했습니다. "
+         "Lab 1에서 찾은 96, 98 코드와 소득 대체값 정리도 파이프라인에 넣었습니다."),
+    16: ("Lab 5 · 결과", 20,
+         "누수를 막아도 AUC는 소수 넷째 자리까지 같아, 지금까지의 결과는 유효했습니다. 데이터 정리 효과도 거의 없었습니다. "
+         "결정트리 하나는 0.6이었지만, 여러 개를 합치자 0.82에서 0.85까지 올랐습니다."),
+    17: ("Lab 5 · 발견·결론", 23,
+         "랜덤 포레스트가 학습 데이터를 외우지 못하게 잎의 최소 인원을 튜닝하자 0.856으로 지금까지 최고가 됐습니다. "
+         "이 모델을 저장해 다시 불러와도 같은 성능이었습니다. 그럼 신경망은 이 기준을 넘을 수 있을까요?"),
 }
 
 # ---------------- 예상 질문 (교수님은 PPT만 보고 질문) ----------------
@@ -310,6 +319,29 @@ QA = {
           "깊이 제한이 없어 학습 데이터를 외웠다(과적합). 여러 트리를 합치는 Lab 5의 앙상블로 보완한다."),
          ("SVM은 왜 가중치 없이 0.579였나?",
           "정상이 93%라 오류를 줄이려면 거의 다 정상으로 가르는 경계가 유리하다. 그래서 점수가 연체 순위를 거의 담지 못했고, 가중치를 주면 0.810으로 회복됐다.")],
+    15: [("데이터 누수란? 왜 문제인가?",
+          "시험 데이터의 정보(평균·표준편차 등)가 학습 단계에 섞이는 것이다. 실제로는 새 고객 데이터를 미리 볼 수 없으므로 점수가 부풀려질 수 있다. "
+          "Pipeline은 전처리를 각 fold의 학습 데이터로만 맞춘다."),
+         ("Voting에서 SVM을 뺀 이유는?",
+          "Lab 4에서 SVM은 15만 건 10-fold에 약 1시간이 걸렸고, 확률을 바로 내지 못해 soft voting에도 맞지 않는다. 같은 자리에 빠른 확률 모델인 나이브 베이즈를 넣었다."),
+         ("데이터 정리는 구체적으로 무엇을 했나?",
+          "30–59일 연체의 96·98 코드는 0으로 바꾸고 '코드였음' 표시 열을 추가했다. 소득 6638·6746(결측 대체값으로 추정)에도 표시 열을 추가했다. 행을 지우지는 않았다.")],
+    16: [("누수를 막았는데 왜 AUC가 같나?",
+          "로그 변환은 값마다 따로 계산해 누수가 없고, 표준화는 평균·표준편차를 쓰는데 15만 건에서는 fold마다 거의 같다. 데이터가 작으면 차이가 날 수 있다."),
+         ("96/98 코드는 연체율이 54.6%인데 왜 정리 효과가 없나?",
+          "같은 고객이 '연체 이력' 변수에서 이미 1로 잡혀 있어(60–89일·90일 이상 연체도 같은 코드) 모델이 이미 위험 고객으로 보고 있었다."),
+         ("Bagging과 랜덤 포레스트의 차이는?",
+          "둘 다 다른 표본으로 트리를 여러 개 만든다. RF는 나눌 때마다 변수 3개만 무작위로 후보로 둬서 트리끼리 덜 닮게 만든다."),
+         ("AdaBoost는 왜 기본 설정에서 가장 높았나?",
+          "기본 약한 학습기가 깊이 1인 얕은 트리라 외우지 못하고, 앞 트리가 틀린 고객에 가중치를 높여 다음 트리가 고치게 한다.")],
+    17: [("min_samples_leaf를 키우면 왜 좋아지나?",
+          "잎에 최소 인원을 두면 몇 명만을 위한 세밀한 규칙(외우기)을 만들 수 없어 새 데이터에 강해진다. 확률도 여러 명의 비율이라 더 부드러워져 순위가 좋아진다."),
+         ("Grid와 Random Search 중 무엇이 나은가?",
+          "Grid는 정한 값만 보고, Random은 같은 횟수로 넓은 범위를 본다. 여기서는 50 이상에서 평평해 둘 다 비슷했다. 변수가 많을수록 Random이 효율적이다."),
+         ("저장한 모델을 다른 컴퓨터에서 쓰려면?",
+          "같은 Python·scikit-learn 버전이 필요하고, 파이프라인 안의 정리·로그 함수도 같은 코드로 있어야 한다(Lab 5 (s)). 버전은 노트북에 기록했다."),
+         ("0.856이면 좋은 성능인가?",
+          "Lab 4 등급표로 0.80–0.90 = good(B)이다. 연체자를 정상 고객보다 위험하게 줄 세울 확률이 약 86%라는 뜻이다.")],
 }
 # 전체 장 시간 배분 (합계 420초). 아직 만들지 않은 장은 대본 파일에 '작성 예정'으로 표시된다.
 FULL_PLAN = [("표지", 10), ("문제 정의", 25)] \
@@ -1193,6 +1225,157 @@ KNN은 기본 이웃 수가 5라 확률이 여섯 단계뿐이어서 줄 세우�
 SVM은 15만 건으로는 10-fold에 약 한 시간이 걸려 1만 건 표본으로 비교했는데, 0.579로 거의 찍기 수준이었습니다. 정상이 93%라 거의 모두 정상인 경계를 그었기 때문이고, 연체자 가중치를 주면 0.810으로 회복됐습니다.
 목표 관점의 결론은, 연체자 가중치를 기본으로 쓰고, 후보는 LR과 LDA, 트리는 하나로는 약하니 Lab 5의 앙상블로 다시 본다는 것입니다.
 다음 질문은, 지금까지의 평가가 공정했는지, 그리고 더 올릴 수 있는지입니다. 사실 지금까지는 로그와 표준화를 시험 데이터까지 포함한 전체에 먼저 맞췄습니다.""")
+
+# =====================================================================
+# Lab 5 - (1) 진행 : 파이프라인 · 앙상블 · 튜닝 · 저장
+# =====================================================================
+# 노트북 05 실행 결과 (results.md 와 같은 값)
+L5 = dict(grid_leaf=200, grid_auc=0.8555, rand_leaf=176, rand_auc=0.8555, final_leaf=176, final_auc=0.8556,
+          final_std=0.0070, leaf1_auc=0.8244, mb=3.7, test_auc=0.8558, fold_diff=0.001, rf_noclean=0.8555)
+if L5["final_auc"] is None:  # 노트북 05 결과를 채우기 전에는 Lab 4까지만 만든다
+    prs.save(DRAFT)
+    write_script_md(ROOT / "slides" / "script.md")
+    print("saved (Lab 5 결과 대기 중)", DRAFT)
+    raise SystemExit
+s = new_slide()
+lab_header(s, 5, 1, "파이프라인 · 앙상블 · 튜닝", "Lab 5의 파이프라인 · 앙상블 · 튜닝 · 저장을 차례로 적용했다",
+           terms=[("파이프라인", "전처리와 모델을 한 묶음으로"), ("앙상블", "여러 모델을 합쳐 예측"),
+                  ("튜닝", "설정값을 바꿔 가며 최고 찾기")])
+steps5 = [("Pipeline", "Pipeline", "0.8436 그대로"), ("FeatureUnion", "PCA + KBest", "0.8436"),
+          ("Bagging", "트리 100개", "0.819"), ("랜덤 포레스트", "RF(100, 3)", "0.824"),
+          ("AdaBoost", "트리 30개", "0.847"), ("Voting", "LR+CART+NB", "0.830"),
+          ("튜닝", "Grid · Random", f"RF {L5['final_auc']:.3f}"), ("모델 저장", "pickle · joblib", f"{L5['mb']:.1f} MB")]
+parts = [text(s, 0.8, 1.98, 11.7, 0.3, [[("Lab 5 자료의 진행 순서", {"weight": "bold"}),
+                                         ("   → 1–2 파이프라인 · 3–6 앙상블 · 7–8 튜닝·저장, 실제 데이터 결과", {"color": C["mute"], "weight": "medium"})]],
+              size=13)]
+for i, (ko, fn, res) in enumerate(steps5):
+    x = 0.8 + i * (sw3 + gap3)
+    ens_step = 2 <= i <= 5
+    fill = C["violet_pale"] if ens_step else C["blue_pale"]
+    dot = C["violet"] if ens_step else C["blue"]
+    parts += [rect(s, x, 2.35, sw3, 1.18, fill, radius=0.16),
+              oval(s, x + 0.13, 2.47, 0.28, dot),
+              text(s, x + 0.13, 2.47, 0.28, 0.28, str(i + 1), size=10.5, color="#FFFFFF", weight="bold", align="c", anchor="m"),
+              text(s, x + 0.47, 2.47, sw3 - 0.5, 0.28, ko, size=11.5 if len(ko) < 7 else (10.5 if len(ko) < 10 else 9.5), weight="bold", anchor="m"),
+              text(s, x + 0.13, 2.84, sw3 - 0.2, 0.25, fn, size=9.5, color=dot, weight="medium", latin=MONO),
+              rect(s, x + 0.1, 3.14, sw3 - 0.2, 0.3, C["bg"], radius=0.08),
+              text(s, x + 0.1, 3.14, sw3 - 0.2, 0.3, res, size=10, color=C["blue"] if i == 6 else C["ink"],
+                   weight="semibold", align="c", anchor="m")]
+group(s, parts, "anim1_steps")
+h5 = capture_card(s, 0.8, 3.7, 5.2, CAP / "lab5_pipeline.png", "p.2 · 1 Pipeline", anim=2, img_w=4.4)
+capture_card(s, 0.8, 3.7 + h5 + 0.12, 5.2, CAP / "lab5_rf.png", "p.4 · 2 Random Forest", anim=2, img_w=4.4)
+console(s, 6.2, 3.7, 6.33, 3.35, "실행 결과 · 05_lab5_pipeline_ensemble_tuning.ipynb", [
+    cmd("Pipeline([log, standardize, lr])", "1 누수 막기"),
+    [("0.8436 → 0.8436", "hi"), ("   ← 전체에 먼저 맞춘 값과 같음", "dim")],
+    cmd("isin(late30, [96, 98])", "+ 데이터 정리"),
+    [("269행 · 연체율 54.6%", "red"), ("   ← 연체 이력 변수에 이미 담김", "dim")],
+    cmd("RandomForestClassifier(100, 3)", "4 RF"),
+    [("0.824", "hi"), ("   ← 트리가 끝까지 자라 외움", "dim")],
+    cmd("GridSearchCV(rf, min_samples_leaf)", "7 튜닝"),
+    [(f"leaf={L5['grid_leaf']} → {L5['grid_auc']:.3f}", "hi"), (f"   ← leaf=1이면 {L5['leaf1_auc']:.3f}", "dim")],
+    cmd("joblib.dump(final, '...sav')", "8 저장"),
+    [(f"{L5['mb']:.1f} MB · 다시 불러와도 AUC {L5['test_auc']:.3f}", "hi")],
+], size=10.5, anim=3, lh=15)
+notes(s, f"""Lab 5는 파이프라인, 앙상블, 튜닝, 모델 저장을 다룹니다.
+먼저 Lab 4까지의 약점을 바로잡았습니다. 지금까지는 로그와 표준화를 시험 데이터까지 포함한 전체에 먼저 맞췄는데, 파이프라인으로 묶으면 각 fold의 학습 데이터로만 맞춥니다.
+여기에 Lab 1에서 찾아 두었던 문제 데이터, 즉 30–59일 연체의 96·98 코드와 소득 대체값 6638·6746을 정리하는 단계도 파이프라인에 넣었습니다.
+앙상블은 Lab 5 순서대로 결정트리 100개 Bagging, 변수 3개씩 고르는 랜덤 포레스트 100개, AdaBoost 30개, 그리고 Voting을 비교했습니다. Voting의 SVM은 Lab 4에서 본 대로 15만 건에 너무 느려 나이브 베이즈로 바꿨습니다.
+튜닝은 랜덤 포레스트의 잎 최소 인원을 Grid와 Random Search로 찾았고, 최종 모델을 pickle과 joblib으로 저장한 뒤 다시 불러와 시험했습니다.""")
+
+# =====================================================================
+# Lab 5 - (2) 결과 : 누수 확인 + 앙상블
+# =====================================================================
+s = new_slide()
+lab_header(s, 5, 2, "파이프라인 · 앙상블 · 튜닝", "누수를 막아도 결과는 같았고, 트리는 합치자 0.597 → 0.847로 올랐다",
+           terms=[("누수", "시험 데이터 정보가 학습에 섞임"), ("Bagging", "다른 표본으로 만든 트리의 평균"),
+                  ("AdaBoost", "앞 트리의 실수를 다음 트리가 고침")])
+rows5 = [("", "전체에 먼저 맞춤", "파이프라인", "+ 데이터 정리"),
+         ("LR 가중치", "0.8436", "0.8436", "0.8436"),
+         ("LDA", "0.8318", "0.8318", "0.8325"),
+         ("RF 튜닝", "변환 불필요", f"{L5['rf_noclean']:.4f}", f"{L5['final_auc']:.4f}")]
+lparts = [rect(s, 0.8, 2.15, 5.6, 4.9, C["card"], radius=0.25),
+          text(s, 1.1, 2.32, 5.0, 0.35, [[("파이프라인 · 데이터 정리  ", {"weight": "bold"}),
+                                         ("층화 10-fold AUC", {"color": C["mute"]})]], size=12, weight="medium")]
+tbl = s.shapes.add_table(4, 4, Inches(1.05), Inches(2.8), Inches(5.1), Inches(1.9)).table
+for j, w in enumerate([1.2, 1.4, 1.2, 1.3]):
+    tbl.columns[j].width = Inches(w)
+for i, row in enumerate(rows5):
+    tbl.rows[i].height = Inches(0.46)
+    for j, val in enumerate(row):
+        cell = tbl.cell(i, j)
+        cell.margin_left = cell.margin_right = Inches(0.06)
+        cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+        cell.fill.solid()
+        cell.fill.fore_color.rgb = rgb(C["blue_pale"] if i == 0 else C["bg"])
+        p = cell.text_frame.paragraphs[0]
+        p.alignment = PP_ALIGN.LEFT if j == 0 else PP_ALIGN.CENTER
+        r = p.add_run()
+        r.text = val
+        if i == 0:
+            set_font(r, 10, "bold", C["blue"])
+        else:
+            set_font(r, 12 if j else 11.5, "semibold", C["ink"] if j else C["ink"], latin=None)
+lparts.append(s.shapes[-1])
+lparts += [rect(s, 1.05, 4.9, 5.1, 0.95, C["bg"], radius=0.16),
+           text(s, 1.3, 4.9, 4.7, 0.95,
+                [[("누수 영향 없음", {"weight": "bold", "color": C["blue"]}), ("  15만 건이라 fold마다", {"color": C["sub"]})],
+                 [(f"평균 차이가 표준편차의 {L5['fold_diff']:.1%} 이하", {"color": C["sub"]})]],
+                size=12.5, weight="medium", anchor="m", line=1.3),
+           rect(s, 1.05, 5.97, 5.1, 0.88, C["bg"], radius=0.16),
+           text(s, 1.3, 5.97, 4.7, 0.88,
+                [[("데이터 정리 효과 ≈ 0", {"weight": "bold", "color": C["ink"]}), ("  96/98 코드는 연체율 54.6%지만", {"color": C["sub"]})],
+                 [("'연체 이력' 변수에 이미 담겨 있었다", {"color": C["sub"]})]],
+                size=12.5, weight="medium", anchor="m", line=1.3)]
+group(s, lparts, "anim1_pipe")
+group(s, [rect(s, 6.6, 2.15, 5.93, 4.9, C["card"], radius=0.25),
+          text(s, 6.9, 2.32, 5.4, 0.35, [[("모델별 AUC  ", {"weight": "bold"}),
+                                         ("층화 10-fold · 회색 = 트리 앙상블(기본 설정)", {"color": C["mute"]})]], size=12, weight="medium"),
+          s.shapes.add_picture(str(FIG / "lab5_models.png"), Inches(6.78), Inches(2.85), width=Inches(5.6))],
+      "anim2_models")
+group(s, [rect(s, 6.85, 5.97, 5.43, 0.88, C["blue_pale"], radius=0.16),
+          text(s, 7.1, 5.97, 5.0, 0.88,
+               [[("트리 1개 0.597", {"weight": "bold", "color": C["ink"]}), ("  학습 데이터를 외움", {"color": C["sub"]})],
+                [("→ 합치면(Bagging·RF) 0.82 · 이어 붙이면(AdaBoost) ", {"color": C["sub"]}),
+                 ("0.847", {"color": C["blue"], "weight": "extrabold"})]],
+               size=12.5, weight="medium", anchor="m", line=1.3)], "anim3_ens")
+notes(s, f"""왼쪽은 파이프라인 결과입니다. 로그와 표준화를 전체 데이터에 먼저 맞췄을 때와, 파이프라인으로 각 fold 안에서만 맞췄을 때 AUC가 소수 넷째 자리까지 같았습니다.
+15만 건이라 fold마다 표준화에 쓰는 평균이 거의 같기 때문입니다. 차이가 표준편차의 {L5['fold_diff']:.1%} 이하였습니다. 그래서 Lab 2에서 4까지의 결과는 그대로 유효합니다.
+Lab 1에서 찾은 96, 98 코드는 269행으로 연체율이 54.6%나 되지만, 같은 고객이 '연체 이력' 변수에 이미 1로 잡혀 있어 정리해도 거의 변화가 없었습니다.
+오른쪽은 앙상블입니다. 결정트리 하나는 0.597였지만, 100개를 합친 Bagging은 0.819, 랜덤 포레스트는 0.824로 올랐습니다. 서로 다른 표본으로 만든 트리의 실수가 평균으로 상쇄되기 때문입니다.
+얕은 트리를 이어 붙여 앞의 실수를 고치는 AdaBoost는 0.847로 가장 높았고, Voting은 과적합된 결정트리가 평균을 끌어내려 0.830이었습니다.""")
+
+# =====================================================================
+# Lab 5 - (3) 발견 · 결론 : 튜닝 + 저장
+# =====================================================================
+s = new_slide()
+lab_header(s, 5, 3, "파이프라인 · 앙상블 · 튜닝", f"트리가 외우지 못하게 막자 랜덤 포레스트가 {L5['final_auc']:.3f}으로 최고였다",
+           terms=[("min_samples_leaf", "잎 하나에 남아야 할 최소 인원"), ("Grid", "정해 둔 값을 모두 시험"),
+                  ("Random", "무작위로 골라 시험")])
+group(s, [rect(s, 0.8, 2.15, 6.0, 4.05, C["card"], radius=0.25),
+          text(s, 1.1, 2.33, 5.4, 0.35, [[("랜덤 포레스트 튜닝  ", {"weight": "bold", "color": C["ink"]}),
+                                         ("잎 최소 인원에 따른 AUC", {"color": C["mute"]})]], size=13),
+          s.shapes.add_picture(str(FIG / "lab5_tuning.png"), Inches(1.45), Inches(2.75), width=Inches(4.7))],
+      "anim1_chart")
+finds = [("01", f"Grid: leaf {L5['grid_leaf']} → {L5['grid_auc']:.3f}", f"leaf 1(기본)은 {L5['leaf1_auc']:.3f} · 클수록 덜 외움", C["blue"]),
+         ("02", f"Random 10번: leaf {L5['rand_leaf']} → {L5['rand_auc']:.3f}", "격자 사이 값을 찾았지만 차이는 흔들림 안", C["blue"]),
+         ("03", f"저장 후 다시 불러와도 AUC {L5['test_auc']:.3f}", f"정리 단계까지 한 파일 · {L5['mb']:.1f} MB", C["blue"])]
+parts = []
+for i, (no, head, body, col) in enumerate(finds):
+    yy = 2.15 + i * 0.72
+    parts += [text(s, 7.1, yy, 0.6, 0.4, no, size=17, color=col, weight="extrabold"),
+              text(s, 7.65, yy, 4.9, 0.4, head, size=16, weight="bold"),
+              text(s, 7.65, yy + 0.34, 4.9, 0.35, body, size=12.5, color=C["sub"], weight="medium")]
+group(s, parts, "anim2_finds")
+conclusion_card(s, 7.05, 4.4, 5.48, 1.8, [
+    [("① ", {"color": C["violet"], "weight": "bold"}), (f"최종 후보: 정리 + RF(잎 최소 {L5['final_leaf']}명), AUC {L5['final_auc']:.3f}", {})],
+    [("② ", {"color": C["violet"], "weight": "bold"}), (f"MLP는 이 기준 {L5['final_auc']:.3f}을 넘어야 의미가 있다", {})],
+], anim=3)
+next_bar(s, "신경망(MLP)은 15만 건에서 더 잘 골라낼까?", "Lab 6", "최고 AUC", f"{L5['final_auc']:.3f}", anim=4)
+notes(s, f"""랜덤 포레스트의 트리는 기본 설정에서 잎에 한 명이 남을 때까지 자라 학습 데이터를 외웁니다. 그래서 잎 하나에 남아야 할 최소 인원을 Lab 5의 Grid Search와 Random Search로 찾았습니다.
+Grid는 1, 10, 50, 100, 200 다섯 값을 모두 시험해 {L5['grid_leaf']}에서 {L5['grid_auc']:.3f}이었고, 기본값 1은 {L5['leaf1_auc']:.3f}이었습니다. Random은 1에서 300 사이를 무작위로 10번 골라 {L5['rand_leaf']}에서 {L5['rand_auc']:.3f}을 찾았습니다.
+두 방법의 차이는 흔들림보다 작아, 이 문제에서는 잎 최소 인원을 수십에서 백 명대로 두면 된다는 뜻입니다.
+최종 모델은 데이터 정리와 잎 최소 {L5['final_leaf']}명 랜덤 포레스트를 묶은 파이프라인으로, 층화 10-fold AUC {L5['final_auc']:.3f}입니다. Lab 5 방식대로 pickle과 joblib으로 저장하고 다시 불러와도 시험 AUC가 {L5['test_auc']:.3f}로 같았습니다.
+목표 관점의 결론은, 지금까지의 최고 기준이 {L5['final_auc']:.3f}이고, 다음 Lab 6의 신경망은 이 기준을 넘어야 의미가 있다는 것입니다.""")
 
 prs.save(DRAFT)
 print("saved", DRAFT)
