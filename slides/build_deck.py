@@ -232,6 +232,15 @@ SCRIPTS = {
     17: ("Lab 5 · 발견·결론", 23,
          "랜덤 포레스트가 학습 데이터를 외우지 못하게 잎의 최소 인원을 튜닝하자 0.856으로 지금까지 최고가 됐습니다. "
          "이 모델을 저장해 다시 불러와도 같은 성능이었습니다. 그럼 신경망은 이 기준을 넘을 수 있을까요?"),
+    18: ("Lab 6 · 진행", 15,
+         "Lab 6의 MLP 구조를 그대로 쓰되, 배치 10에 150 에폭이면 15만 건에서 모델 하나에 26분이 걸려, "
+         "배치 크기부터 직접 재고 EarlyStopping을 붙여 교차검증과 Grid Search를 했습니다."),
+    19: ("Lab 6 · 결과", 20,
+         "배치 다섯 가지를 150 에폭까지 모두 재 보니, AUC는 0.851에서 0.855로 거의 같았고 시간은 100배 가까이 차이 났습니다. "
+         "그래서 배치 10보다 13배 빠르면서 성능이 같은 배치 128을 골랐습니다."),
+    20: ("Lab 6 · 발견·결론", 23,
+         "MLP는 10-fold AUC 0.850으로, 튜닝한 랜덤 포레스트 0.856보다 조금 낮았고 학습은 16배 느렸습니다. "
+         "변수 8개의 표 데이터에서는 트리 앙상블이 더 효율적이라, 최종 모델은 랜덤 포레스트로 정했습니다."),
 }
 
 # ---------------- 예상 질문 (교수님은 PPT만 보고 질문) ----------------
@@ -342,6 +351,29 @@ QA = {
           "같은 Python·scikit-learn 버전이 필요하고, 파이프라인 안의 정리·로그 함수도 같은 코드로 있어야 한다(Lab 5 (s)). 버전은 노트북에 기록했다."),
          ("0.856이면 좋은 성능인가?",
           "Lab 4 등급표로 0.80–0.90 = good(B)이다. 연체자를 정상 고객보다 위험하게 줄 세울 확률이 약 86%라는 뜻이다.")],
+    18: [("배치와 에폭은 무엇인가?",
+          "배치는 가중치를 한 번 고칠 때 보는 고객 수, 에폭은 전체 데이터를 한 바퀴 학습하는 것이다. 배치 128이면 한 바퀴에 약 785번 고친다."),
+         ("Grid Search에서 배치와 에폭을 왜 뺐나?",
+          "Lab 6 격자(54가지 × 3-fold)를 15만 건에 쓰면 배치 10 조합만 약 16시간, 전체는 이틀 이상이다. 배치는 실험 A로, 에폭은 EarlyStopping으로 따로 정했다."),
+         ("KerasClassifier는 어떻게 썼나?",
+          "최신 Keras 3에는 원래 래퍼가 없어서, 같은 역할(fit·predict_proba·get_params)을 하는 래퍼를 직접 만들어 sklearn Pipeline·cross_val_score·GridSearchCV에 넣었다.")],
+    19: [("배치가 크면 왜 빠른가?",
+          "한 번에 여러 고객을 묶어 행렬 계산을 하므로 CPU가 효율적으로 일한다. 배치 10은 한 바퀴에 약 1만 번, 2048은 49번만 가중치를 고친다."),
+         ("배치가 작으면 왜 1 에폭 AUC가 높은가?",
+          "한 바퀴에 가중치를 더 자주 고쳐서 적은 에폭으로도 많이 배운다. 대신 한 바퀴 시간이 길다."),
+         ("이 표는 10-fold가 아니라 한 번 분할인데 괜찮나?",
+          "Lab 6의 Manual Verification(67:33) 방식이다. 배치 간 상대 비교용이고, 최종 성능은 배치 128로 층화 10-fold를 다시 했다(0.850)."),
+         ("EarlyStopping은 어떻게 판단하나?",
+          "학습 데이터의 10%를 검증용으로 떼어, 그 AUC가 10 에폭 동안 오르지 않으면 멈추고 가장 좋았던 에폭의 가중치로 되돌린다.")],
+    20: [("MLP가 랜덤 포레스트보다 낮은 이유는?",
+          "변수가 8개뿐이고 관계가 비교적 단순한 표 데이터라 트리 앙상블이 강하다. 차이 0.006은 흔들림(약 0.007) 안이라 '비슷한 수준이지만 넘지 못했다'가 정확하다. "
+          "참고 논문(Ichim & Issa 2025)에서도 같은 데이터에서 신경망 0.856, 트리 계열 0.87대였다."),
+         ("MLP를 더 크게 만들면 오르지 않나?",
+          "Lab 6 구조(12-8)를 기준으로 했다. Grid Search로 optimizer·초기화를 바꿔도 0.849~0.850으로 그대로였고, 부스팅도 0.857에서 멈춰 데이터 자체의 한계에 가깝다."),
+         ("학습 데이터 AUC 0.852와 시험 0.851이 거의 같은데 과적합이 없나?",
+          "EarlyStopping이 검증 점수가 멈추면 학습을 끝내서 외우기 전에 멈췄다. Lab 6 (c)처럼 학습 데이터로만 재면 과적합을 알 수 없어서 시험 데이터를 따로 비교했다."),
+         ("정확도가 76%로 낮은데?",
+          "연체자 가중치를 줘서 연체로 판정하는 사람이 늘었기 때문이다. 정확도는 '전부 정상'(93.3%)이 이기는 지표라 AUC로 비교한다.")],
 }
 # 전체 장 시간 배분 (합계 420초). 아직 만들지 않은 장은 대본 파일에 '작성 예정'으로 표시된다.
 FULL_PLAN = [("표지", 10), ("문제 정의", 25)] \
@@ -1376,6 +1408,164 @@ Grid는 1, 10, 50, 100, 200 다섯 값을 모두 시험해 {L5['grid_leaf']}에�
 두 방법의 차이는 흔들림보다 작아, 이 문제에서는 잎 최소 인원을 수십에서 백 명대로 두면 된다는 뜻입니다.
 최종 모델은 데이터 정리와 잎 최소 {L5['final_leaf']}명 랜덤 포레스트를 묶은 파이프라인으로, 층화 10-fold AUC {L5['final_auc']:.3f}입니다. Lab 5 방식대로 pickle과 joblib으로 저장하고 다시 불러와도 시험 AUC가 {L5['test_auc']:.3f}로 같았습니다.
 목표 관점의 결론은, 지금까지의 최고 기준이 {L5['final_auc']:.3f}이고, 다음 Lab 6의 신경망은 이 기준을 넘어야 의미가 있다는 것입니다.""")
+
+# =====================================================================
+# Lab 6 - (1) 진행 : MLP 7단계
+# =====================================================================
+# 노트북 06 실행 결과 (results.md 와 같은 값). None 이면 Lab 5까지만 만든다.
+L6 = dict(
+    train_auc=0.8523, test_auc=0.8513, cv_auc=0.85047, cv_std=0.00752, fold_sec=67, mean_stop=43,
+    wrap_auc=0.8513, wrap_std=0.0066, grid_best=0.8501, grid_worst=0.8490, grid_best_opt="adam", grid_best_init="glorot",
+    n_params=221, final_sec=50, final_epochs=28,
+    title="MLP는 0.850으로, 튜닝한 랜덤 포레스트(0.856)를 넘지 못했다",
+    vs_rf_head="RF 0.856보다 0.006 낮음",
+    vs_rf_body="15만 건 학습도 RF 3초 vs MLP 50초 (약 16배)",
+    concl1="최종 모델: 정리 + RF(잎 176명), AUC 0.856",
+    concl2="MLP는 비슷하지만 느리고 설명이 어렵다",
+    tracker="0.856",
+    notes="""MLP를 층화 10-fold로 평가한 AUC는 0.850, 흔들림은 0.008이었습니다. EarlyStopping 덕분에 fold당 평균 43 에폭에서 멈췄고, fold 하나에 평균 67초가 걸렸습니다.
+Lab 6 Grid Search대로 optimizer 두 가지와 초기화 세 가지를 바꿔 봤지만 0.849에서 0.850 사이로, 차이가 흔들림보다 훨씬 작았습니다. Lab 기본값인 adam과 glorot이 가장 높았습니다.
+그래서 신경망은 튜닝한 랜덤 포레스트 0.856보다 0.006 낮았습니다. 흔들림 범위 안이라 거의 같은 수준이지만, 15만 건 학습에 랜덤 포레스트는 3초, MLP는 50초가 걸렸고, 어떤 변수 때문에 위험하다고 봤는지 설명하기도 어렵습니다.
+변수가 8개뿐이고 관계가 비교적 단순한 표 형태 데이터에서는 트리 앙상블이 신경망보다 효율적이라는 뜻입니다. 참고한 논문에서도 같은 데이터에서 신경망이 트리 계열과 비슷하거나 조금 낮았습니다.
+목표 관점의 결론은, 최종 모델은 데이터 정리와 잎 최소 176명 랜덤 포레스트로 정하고, MLP는 비교 결과로 남긴다는 것입니다.""")
+if L6 is None:
+    prs.save(DRAFT)
+    write_script_md(ROOT / "slides" / "script.md")
+    print("saved (Lab 6 결과 대기 중)", DRAFT)
+    raise SystemExit
+BE = pd.read_csv(ROOT / "notebooks" / "06a_batch_epoch_results.csv")   # 실험 A: 배치 × 에폭
+be = lambda b, e, col: float(BE[(BE.batch == b) & (BE.epoch == e)][col].iloc[0])
+s = new_slide()
+lab_header(s, 6, 1, "Keras MLP", "Lab 6의 MLP 단계를 15만 건에 맞춰 적용했다",
+           terms=[("배치", "가중치를 한 번 고칠 때 보는 고객 수"), ("에폭", "전체 데이터를 한 바퀴 학습"),
+                  ("EarlyStopping", "검증 점수가 멈추면 학습 중단")])
+steps6 = [("첫 MLP", "12-8-1 · adam", "Lab 구조 그대로"), ("학습 평가", "evaluate(X, Y)", f"{L6['train_auc']:.3f} vs {L6['test_auc']:.3f}"),
+          ("검증 분리", "validation 33%", "배치 × 에폭 표"), ("배치 선택", "batch 10~2048", "128 선택"),
+          ("k-fold 반복", "StratifiedKFold", f"AUC {L6['cv_auc']:.3f}"), ("Keras 래퍼", "cross_val_score", f"AUC {L6['wrap_auc']:.3f}"),
+          ("Grid Search", "optimizer × init", f"{L6['grid_best']:.3f}"), ("가중치 저장", "weights.out", f"{L6['n_params']}개")]
+parts = [text(s, 0.8, 1.98, 11.7, 0.3, [[("Lab 6 자료의 진행 순서", {"weight": "bold"}),
+                                         ("   → 1–3 첫 MLP·검증 · 4 15만 건 학습 설정 · 5–8 교차검증·튜닝·저장", {"color": C["mute"], "weight": "medium"})]],
+              size=13)]
+for i, (ko, fn, res) in enumerate(steps6):
+    x = 0.8 + i * (sw3 + gap3)
+    key_step = i == 3
+    fill = C["violet_pale"] if key_step else C["blue_pale"]
+    dot = C["violet"] if key_step else C["blue"]
+    parts += [rect(s, x, 2.35, sw3, 1.18, fill, radius=0.16),
+              oval(s, x + 0.13, 2.47, 0.28, dot),
+              text(s, x + 0.13, 2.47, 0.28, 0.28, str(i + 1), size=10.5, color="#FFFFFF", weight="bold", align="c", anchor="m"),
+              text(s, x + 0.47, 2.47, sw3 - 0.5, 0.28, ko, size=11.5 if len(ko) < 7 else (10.5 if len(ko) < 10 else 9.5), weight="bold", anchor="m"),
+              text(s, x + 0.13, 2.84, sw3 - 0.2, 0.25, fn, size=9.5, color=dot, weight="medium", latin=MONO),
+              rect(s, x + 0.1, 3.14, sw3 - 0.2, 0.3, C["bg"], radius=0.08),
+              text(s, x + 0.1, 3.14, sw3 - 0.2, 0.3, res, size=10, color=C["violet"] if key_step else C["ink"],
+                   weight="semibold", align="c", anchor="m")]
+group(s, parts, "anim1_steps")
+h6 = capture_card(s, 0.8, 3.7, 5.2, CAP / "lab6_kfold.png", "p.6 · 2 k-fold 반복 (batch 10, 150 에폭)", anim=2, img_w=4.6)
+capture_card(s, 0.8, 3.7 + h6 + 0.12, 5.2, CAP / "lab6_grid.png", "p.9 · 3 Grid Search (54가지 × 3-fold)", anim=2, img_w=4.6)
+console(s, 6.2, 3.7, 6.33, 3.35, "실행 결과 · 06_lab6_mlp.ipynb", [
+    cmd("fit(batch_size=10, epochs=150)", "3 Lab 그대로"),
+    [(f"모델 1개 {be(10, 150, 'train_sec') / 60:.0f}분 · Grid Search 이틀 이상", "red")],
+    cmd("fit(batch_size=128, EarlyStopping)", "4 선택"),
+    [(f"{L6['fold_sec']:.0f}초 · 평균 {L6['mean_stop']:.0f} 에폭에서 멈춤", "hi")],
+    cmd("for train, test in kfold.split(X, Y)", "5 직접 반복"),
+    [(f"AUC {L6['cv_auc']:.4f} (± {L6['cv_std']:.4f})", "hi")],
+    cmd("cross_val_score(KerasClassifier)", "6 래퍼"),
+    [(f"AUC {L6['wrap_auc']:.4f} (± {L6['wrap_std']:.4f})", "hi")],
+    cmd("GridSearchCV(optimizer × init)", "7 격자 6가지"),
+    [(f"{L6['grid_best_opt']} · {L6['grid_best_init']} → {L6['grid_best']:.4f}", "hi")],
+], size=10.5, anim=3, lh=15)
+notes(s, f"""Lab 6은 Keras로 MLP를 만들고, 검증 데이터를 나누고, k-fold를 직접 반복한 뒤, KerasClassifier 래퍼와 Grid Search로 넘어갑니다.
+구조는 Lab 6 그대로 은닉층 12개, 8개에 relu, 출력 sigmoid, adam, binary crossentropy를 썼고, 입력은 Lab 2의 로그와 표준화, Lab 4의 연체자 가중치를 적용했습니다.
+문제는 학습 설정이었습니다. Lab 6 예제는 배치 10, 150 에폭인데, 15만 건에서는 모델 하나에 {be(10, 150, 'train_sec') / 60:.0f}분이 걸려 10-fold면 4시간이 넘고, Lab의 격자 54가지를 3-fold로 돌리면 이틀이 넘습니다.
+그래서 먼저 배치 크기 다섯 가지를 150 에폭까지 직접 재서 배치 128을 골랐고, 에폭은 검증 점수가 10 에폭 동안 오르지 않으면 멈추는 EarlyStopping으로 정했습니다.
+그 설정으로 층화 10-fold를 직접 반복했고, 같은 일을 KerasClassifier와 cross_val_score로도 해서 결과가 같음을 확인했습니다. Grid Search는 배치와 에폭을 빼고 optimizer와 초기화 6가지만 찾았습니다.""")
+
+# =====================================================================
+# Lab 6 - (2) 결과 : 배치 × 에폭 표
+# =====================================================================
+s = new_slide()
+speed = be(10, 150, 'train_sec') / be(128, 150, 'train_sec')
+lab_header(s, 6, 2, "Keras MLP", f"배치를 10에서 128로 키우자 시간은 {speed:.0f}배 줄고 AUC는 그대로였다",
+           terms=[("검증 AUC", "학습에 안 쓴 33%로 잰 점수"), ("시간", "그 에폭까지 순수 학습 시간")])
+E6, B6 = [1, 10, 50, 150], [10, 32, 128, 512, 2048]
+tparts = [rect(s, 0.8, 2.15, 6.55, 4.9, C["card"], radius=0.25),
+          text(s, 1.1, 2.32, 6.0, 0.35, [[("배치 크기 × 에폭  ", {"weight": "bold"}),
+                                         ("칸 = 검증 AUC / 누적 학습 시간 · 15만 건 중 10만 건 학습", {"color": C["mute"]})]], size=12, weight="medium")]
+tbl = s.shapes.add_table(len(B6) + 1, len(E6) + 1, Inches(1.05), Inches(2.8), Inches(6.05), Inches(3.4)).table
+for j, w in enumerate([1.05] + [1.25] * len(E6)):
+    tbl.columns[j].width = Inches(w)
+for i in range(len(B6) + 1):
+    tbl.rows[i].height = Inches(0.42 if i == 0 else 0.6)
+    for j in range(len(E6) + 1):
+        cell = tbl.cell(i, j)
+        cell.margin_left = cell.margin_right = Inches(0.04)
+        cell.margin_top = cell.margin_bottom = Inches(0.02)
+        cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+        cell.fill.solid()
+        b = B6[i - 1] if i else None
+        cell.fill.fore_color.rgb = rgb(C["blue_pale"] if i == 0 else (C["violet_pale"] if b == 128 else C["bg"]))
+        tf = cell.text_frame
+        p = tf.paragraphs[0]
+        p.alignment = PP_ALIGN.CENTER
+        if i == 0:
+            r = p.add_run(); r.text = "배치 \\ 에폭" if j == 0 else f"{E6[j - 1]}"
+            set_font(r, 10, "bold", C["blue"])
+        elif j == 0:
+            r = p.add_run(); r.text = f"{b}" + ("  (Lab)" if b == 10 else "")
+            set_font(r, 11.5, "bold", C["violet"] if b == 128 else C["ink"])
+        else:
+            e = E6[j - 1]
+            auc, sec = be(b, e, 'val_auc'), be(b, e, 'train_sec')
+            r = p.add_run(); r.text = f"{auc:.3f}"
+            set_font(r, 12, "bold", C["ink"] if auc >= 0.84 else C["mute"])
+            p2 = tf.add_paragraph(); p2.alignment = PP_ALIGN.CENTER
+            r2 = p2.add_run(); r2.text = f"{sec / 60:.0f}분" if sec >= 600 else f"{sec:.0f}초" if sec >= 10 else f"{sec:.1f}초"
+            set_font(r2, 9.5, "semibold", C["red"] if sec >= 600 else C["mute"])
+tparts.append(s.shapes[-1])
+tparts.append(text(s, 1.1, 6.38, 6.0, 0.5, [[("Lab 6 설정(배치 10 · 150 에폭)이면 ", {"color": C["sub"]}), (f"모델 1개 {be(10, 150, 'train_sec') / 60:.0f}분 → 10-fold 약 {be(10, 150, 'train_sec') * 10 * 1.35 / 3600:.0f}시간", {"color": C["red"], "weight": "bold"})]], size=12.5, weight="medium"))
+group(s, tparts, "anim1_table")
+group(s, [rect(s, 7.55, 2.15, 4.98, 3.55, C["card"], radius=0.25),
+          text(s, 7.85, 2.32, 4.5, 0.35, [[("AUC × 학습 시간  ", {"weight": "bold"}), ("로그 눈금", {"color": C["mute"]})]],
+               size=12, weight="medium"),
+          s.shapes.add_picture(str(FIG / "lab6_auc_time.png"), Inches(7.79), Inches(2.76), width=Inches(4.5))],
+      "anim2_curve")
+group(s, [rect(s, 7.55, 5.85, 4.98, 1.2, C["blue_pale"], radius=0.2),
+          text(s, 7.8, 5.85, 4.6, 1.2,
+               [[("배치 128 + EarlyStopping 선택", {"weight": "extrabold", "color": C["ink"], "size": 15})],
+                [(f"AUC는 0.851~0.855로 모두 비슷 · 시간은 최대 {be(10, 150, 'train_sec') / be(2048, 150, 'train_sec'):.0f}배 차이", {"color": C["sub"]})]],
+               size=12, weight="medium", anchor="m", line=1.35)], "anim3_pick")
+notes(s, f"""왼쪽 표는 배치 크기 다섯 가지를 각각 150 에폭까지 학습하며, 칸마다 학습에 쓰지 않은 33%로 잰 AUC와 그때까지의 학습 시간을 적은 것입니다. 추정 없이 모두 직접 쟀습니다.
+150 에폭 기준 AUC는 0.851에서 0.855 사이로 거의 같았습니다. 반면 시간은 Lab 6 설정인 배치 10이 {be(10, 150, 'train_sec') / 60:.0f}분, 배치 2048이 {be(2048, 150, 'train_sec'):.0f}초로 100배 가까이 차이 났습니다.
+배치가 작으면 한 바퀴에 가중치를 더 자주 고쳐서 적은 에폭으로도 빨리 배우고, 배치가 크면 한 번 계산이 빨라서 시간이 덜 듭니다. 배치 512는 50 에폭 뒤로 AUC가 더 오르지 않았는데, 이게 EarlyStopping이 필요한 이유입니다.
+그래서 0.854로 최상위권이면서 배치 10보다 {speed:.0f}배 빠른 배치 128을 골랐고, 에폭은 EarlyStopping으로 정했습니다.""")
+
+# =====================================================================
+# Lab 6 - (3) 발견 · 결론 : MLP vs 기존 모델
+# =====================================================================
+s = new_slide()
+lab_header(s, 6, 3, "Keras MLP", L6['title'],
+           terms=[("층화 10-fold", "Lab 3부터 쓴 같은 시험 기준"), ("± 값", "10번 시험 점수의 흔들림")])
+group(s, [rect(s, 0.8, 2.15, 6.0, 4.05, C["card"], radius=0.25),
+          text(s, 1.1, 2.33, 5.4, 0.35, [[("모델별 AUC  ", {"weight": "bold", "color": C["ink"]}),
+                                         ("모두 층화 10-fold · 막대 끝 = 흔들림", {"color": C["mute"]})]], size=13),
+          s.shapes.add_picture(str(FIG / "lab6_compare.png"), Inches(1.15), Inches(2.8), width=Inches(5.3))],
+      "anim1_chart")
+finds = [("01", f"MLP {L6['cv_auc']:.3f} ± {L6['cv_std']:.3f}", f"fold당 {L6['fold_sec']:.0f}초 · 평균 {L6['mean_stop']:.0f} 에폭에서 멈춤", C["blue"]),
+         ("02", f"Grid 6가지: {L6['grid_worst']:.3f} ~ {L6['grid_best']:.3f}", "optimizer·초기화 차이는 흔들림 안", C["blue"]),
+         ("03", L6['vs_rf_head'], L6['vs_rf_body'], C["red"])]
+parts = []
+for i, (no, head, body, col) in enumerate(finds):
+    yy = 2.15 + i * 0.72
+    parts += [text(s, 7.1, yy, 0.6, 0.4, no, size=17, color=col, weight="extrabold"),
+              text(s, 7.65, yy, 4.9, 0.4, head, size=16, weight="bold"),
+              text(s, 7.65, yy + 0.34, 4.9, 0.35, body, size=12.5, color=C["sub"], weight="medium")]
+group(s, parts, "anim2_finds")
+conclusion_card(s, 7.05, 4.4, 5.48, 1.8, [
+    [("① ", {"color": C["violet"], "weight": "bold"}), (L6['concl1'], {})],
+    [("② ", {"color": C["violet"], "weight": "bold"}), (L6['concl2'], {})],
+], anim=3)
+next_bar(s, "그래서 은행은 이 모델로 무엇을 할 수 있을까?", "최종 결론", "최고 AUC", L6['tracker'], anim=4)
+notes(s, L6['notes'])
 
 prs.save(DRAFT)
 print("saved", DRAFT)

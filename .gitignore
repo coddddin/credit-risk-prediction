@@ -5,3 +5,4 @@ data/*.csv
 *.sav
 *.keras
 slides/_draft.pptx
+notebooks/weights.out

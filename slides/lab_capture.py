@@ -53,3 +53,6 @@ if __name__ == "__main__":
     lab5 = "Lab5_Automating and Saving the Model Soln.pdf"
     print(capture(lab5, 1, "# create pipeline", "model = Pipeline(estimators)", "lab5_pipeline.png", pad=1))
     print(capture(lab5, 3, "num_trees = 100", "max_features=max_features)", "lab5_rf.png", nth=1, pad=1))
+    lab6 = "Lab6 MLP with Keras Soln.pdf"
+    print(capture(lab6, 5, "for train, test in kfold.split", "model.fit(X[train]", "lab6_kfold.png", pad=1))
+    print(capture(lab6, 8, "optimizers = ['rmsprop', 'adam']", "grid = GridSearchCV", "lab6_grid.png", pad=1))

@@ -43,7 +43,9 @@ class KerasClassifier(ClassifierMixin, BaseEstimator):
         self.history_ = self.model_.fit(
             X, np.asarray(y, dtype="float32"), epochs=self.epochs, batch_size=self.batch_size,
             verbose=self.verbose, validation_split=self.validation_split,
-            callbacks=self.callbacks, class_weight=self.class_weight)
+            # callbacks에 함수를 주면 학습할 때마다 새로 만든다 (GridSearchCV가 모델을 복사해도 안전)
+            callbacks=self.callbacks() if callable(self.callbacks) else self.callbacks,
+            class_weight=self.class_weight)
         return self
 
     def predict_proba(self, X):
