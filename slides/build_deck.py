@@ -1741,7 +1741,7 @@ lparts.append(s.shapes[-1])
 group(s, lparts, "anim1_compare")
 # AUC 여정
 journey = [("찍기", "0.50"), ("Lab 2", "0.824"), ("Lab 4", "0.844"), ("Lab 5", "0.856"), ("최적", "0.858")]
-jparts = [rect(s, 7.6, 2.15, 4.93, 1.3, C["card"], radius=0.22),
+jparts = [rect(s, 7.6, 2.15, 4.93, 1.16, C["card"], radius=0.22),
           text(s, 7.85, 2.27, 4.5, 0.3, [[("AUC 여정  ", {"weight": "bold"}), ("MLP 0.850 · GAN 0.817은 넘지 못함", {"color": C["mute"]})]],
                size=11.5, weight="medium")]
 for k, (lab, v) in enumerate(journey):
@@ -1752,8 +1752,9 @@ for k, (lab, v) in enumerate(journey):
     if k:
         jparts.append(text(s, x - 0.16, 2.92, 0.2, 0.3, "→", size=11, color=C["line"], align="c"))
 group(s, jparts, "anim2_journey")
-conclusion_card(s, 7.6, 3.6, 4.93, 2.1, [
-    [("① ", {"color": C["violet"], "weight": "bold"}), ("최종: 최적 모델 (Lab 모델과 차이는 작음)", {})],
+conclusion_card(s, 7.6, 3.45, 4.93, 2.25, [
+    [("① ", {"color": C["violet"], "weight": "bold"}), ("최종: 그래디언트 부스팅 (입력 14개)", {"weight": "bold"})],
+    [("    학습률 0.021 · 트리 608개 · 잎 최소 127명", {"size": 11.5, "color": C["sub"]})],
     [("② ", {"color": C["violet"], "weight": "bold"}), ("위험 상위 10%만 심사 → 연체자 51%", {})],
     [("③ ", {"color": C["violet"], "weight": "bold"}), ("비용 5:1 기준 0.17 → 손실 31% 감소", {})],
 ], anim=3)
