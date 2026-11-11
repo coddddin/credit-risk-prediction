@@ -636,7 +636,7 @@ group(s, pill(s, 0.9, 5.15, 1.45, "Lab 1 → 6", C["blue_pale"], C["blue"])
       + pill(s, 2.48, 5.15, 1.75, "150,000명", C["red_pale"], C["red"])
       + pill(s, 4.36, 5.15, 1.25, "MLP", C["violet_pale"], C["violet"]), "anim2_pills")
 rect(s, 0.9, 6.35, 6.0, 0.012, C["line"])
-text(s, 0.9, 6.5, 6, 0.35, "발표자  (이름) · (학번)", size=13, color=C["mute"], weight="medium")
+text(s, 0.9, 6.5, 6, 0.35, "컴퓨터SW 강희준", size=13, color=C["mute"], weight="medium")
 code_window(s, 7.75, 1.9, 4.85, 3.35, "story.py", '''
 # 발표의 흐름
 for lab in range(1, 7):
