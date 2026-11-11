@@ -535,8 +535,39 @@ def stage_track(s, active, x_right=12.53, seg=0.98, gap=0.06):
              color=C["blue"] if on else C["mute"], weight="bold" if on else "medium")
 
 
+# 같은 용어는 발표 전체에서 처음 나온 장에만 풀이한다 (같은 뜻의 다른 이름은 ALIAS로 묶음)
+SHOWN_TERMS = set()
+TERM_ALIAS = {"k-fold": "10-fold", "층화 10-fold": "층화", "표준편차": "± 값"}
+
+# 제목: 명사형 보고서체 (장 번호 → 제목). lab_header 에 넘긴 제목보다 우선한다.
+TITLES = {
+    3: "Lab 1 절차에 따른 15만 건 데이터 로딩과 기술통계",
+    4: "연체 비율 6.7%와 이상값 확인",
+    5: "극단값에 가려진 '사용 비율'과 연체의 관계",
+    6: "Lab 2 절차에 따른 시각화와 네 가지 변환 적용",
+    7: "세 변수의 쏠림과 로그 변환 효과",
+    8: "로그+표준화(회귀)와 Binarizer(트리)의 효과 차이",
+    9: "Lab 3의 특성 선택 4종과 검증 방법 4종 적용",
+    10: "방법별 선택 변수의 차이와 변수 축소 효과",
+    11: "한 번 분할의 AUC 변동(0.816~0.828)과 층화 10-fold 채택",
+    12: "Lab 4의 평가지표 6종과 알고리즘 6종 비교",
+    13: "정확도 93% 대비 낮은 연체자 탐지율(1.3%)",
+    14: "알고리즘 6종 비교와 선형 계열의 우위(LDA 0.832)",
+    15: "Lab 5의 파이프라인·앙상블·튜닝·저장 적용",
+    16: "누수 방지 효과 검증과 앙상블을 통한 트리 성능 향상",
+    17: "잎 크기 튜닝을 통한 RF 성능 향상(0.856)",
+    18: "Lab 6 MLP의 15만 건 적용 과정",
+    19: "배치 크기와 에폭에 따른 AUC·학습 시간 비교",
+    20: "MLP(0.850)와 튜닝된 RF(0.856)의 성능 비교",
+}
+
+
 def term_line(s, terms, y=1.62):
-    """제목 아래 용어 풀이 한 줄. terms: [(용어, 쉬운 풀이)]"""
+    """제목 아래 용어 풀이 한 줄. terms: [(용어, 쉬운 풀이)]. 앞 장에서 풀이한 용어는 뺀다."""
+    terms = [(t, d) for t, d in terms if TERM_ALIAS.get(t, t) not in SHOWN_TERMS]
+    SHOWN_TERMS.update(TERM_ALIAS.get(t, t) for t, _ in terms)
+    if not terms:
+        return
     pieces = [("용어  ", {"color": C["violet"], "weight": "bold"})]
     for i, (t, d) in enumerate(terms):
         if i:
@@ -560,7 +591,7 @@ def lab_header(s, lab, part, chapter, title, terms=None):
            (f"  {chapter}", {"color": C["mute"], "weight": "medium"}),
            (f"   {['코드', '결과', '발견 · 결론'][part - 1]} {part}/3", {"color": C["violet"], "weight": "semibold"})]],
          size=14, name="!!kicker")
-    text(s, 0.8, 0.98, 11.8, 0.9, title, size=30, weight="extrabold", spacing=-1, name="!!title")
+    text(s, 0.8, 0.98, 11.8, 0.9, TITLES.get(len(prs.slides), title), size=30, weight="extrabold", spacing=-1, name="!!title")
 
 
 def next_bar(s, question, nxt, tracker_label, tracker_value, anim=None):
@@ -597,7 +628,7 @@ def pill(s, x, y, w, label, fill, color, size=13, weight="semibold", h=0.42):
 # =====================================================================
 s = new_slide()
 text(s, 0.9, 1.75, 6.5, 0.45, "알고리즘분석 과제 발표", size=17, color=C["blue"], weight="semibold", name="!!kicker")
-text(s, 0.9, 2.3, 6.8, 2.2, ["Lab 1부터 6까지,", "신용위험을 예측하다"], size=48, weight="extrabold",
+text(s, 0.9, 2.3, 6.8, 2.2, ["Lab 1~6 기반", "신용위험 예측 모델링"], size=48, weight="extrabold",
      line=1.12, spacing=-1.5, name="!!title")
 text(s, 0.9, 4.45, 6.5, 0.45, "Give Me Some Credit · 150,000명의 재무 데이터", size=17, color=C["sub"], weight="medium",
      name="anim1_sub")
@@ -614,7 +645,7 @@ for lab in range(1, 7):
     print(f"Lab {lab}: {question}")
 
 model = MLP(hidden=[12, 8])  # Lab 6
-model.fit(X, y, batch_size=512)
+model.fit(X, y, batch_size=128)
 ''', size=12, highlight=(1, 2, 3), anim=3, lh=19)
 notes(s, "안녕하세요. 저는 Lab 1부터 Lab 6까지 실습한 방법을 그대로 따라가면서, 신용위험 예측 문제를 단계별로 풀어 본 과정을 발표하겠습니다.")
 
@@ -624,7 +655,7 @@ notes(s, "안녕하세요. 저는 Lab 1부터 Lab 6까지 실습한 방법을 �
 s = new_slide()
 stage_track(s, [1])
 text(s, 0.8, 0.55, 5.4, 0.35, "문제 정의", size=14, color=C["blue"], weight="semibold", name="!!kicker")
-text(s, 0.8, 0.98, 11.8, 0.9, "2년 안에 연체할 고객을 미리 찾을 수 있을까?", size=34, weight="extrabold",
+text(s, 0.8, 0.98, 11.8, 0.9, "2년 내 연체 고객 예측 문제와 진행 단계", size=34, weight="extrabold",
      spacing=-1, name="!!title")
 stats = [("150,000", "명의 고객 데이터", C["ink"]), ("8 → 1", "입력 변수 8개로 연체 여부 1개 예측", C["ink"]),
          ("6단계", "AI Modeling 과정을 Lab 1–6으로", C["blue"])]
