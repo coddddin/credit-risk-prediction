@@ -631,14 +631,38 @@ def next_bar(s, question, nxt, tracker_label, tracker_value, anim=None):
     group(s, parts, f"anim{anim}_next" if anim else "!!next")
 
 
+# 발견·결론 장마다 "무엇을 바꿨더니 결과가 어떻게 달라졌나" 한 줄 (장 번호 → (바꾼 것, 결과))
+CHANGES = {
+    5: ("상관 계산: 값 → 순위", "사용 비율 -0.002 → 0.24"),
+    8: ("로그+표준화 (로지스틱 회귀)", "AUC 0.787 → 0.824"),
+    11: ("검증: 층화 10-fold", "0.816~0.828 → 0.824"),
+    14: ("알고리즘 (트리 → LDA)", "AUC 0.595 → 0.832"),
+    17: ("RF 잎 최소 인원 1 → 176명", "AUC 0.824 → 0.856"),
+    20: ("RF → 신경망(MLP)", "AUC 0.856 → 0.850"),
+}
+
+
 def conclusion_card(s, x, y, w, h, lines, anim=None):
     """이번 Lab 결과가 '연체 예측'이라는 목표에 주는 의미."""
+    change = CHANGES.get(len(prs.slides))
+    if change:  # 바꾼 것 → 결과 줄을 넣을 자리만큼 카드를 위아래로 늘린다
+        y, h = y - 0.1, h + 0.2
     parts = [rect(s, x, y, w, h, C["violet_pale"], radius=0.22),
              rect(s, x + 0.3, y + 0.32, 0.06, 0.36, C["violet"]),
              text(s, x + 0.5, y + 0.28, w - 0.8, 0.45,
                   [[("목표에 대한 결론", {}), ("   연체 예측 모델에 주는 의미", {"size": 12, "color": C["mute"], "weight": "medium"})]],
                   size=16, weight="bold", color=C["violet"]),
-             text(s, x + 0.3, y + 0.85, w - 0.6, h - 1.0, lines, size=14, color=C["ink"], weight="medium", line=1.45)]
+             text(s, x + 0.3, y + (1.22 if change else 0.85), w - 0.6, h - (1.35 if change else 1.0), lines,
+                  size=14, color=C["ink"], weight="medium", line=1.45)]
+    if change:
+        what, res = change
+        parts += [rect(s, x + 0.3, y + 0.74, w - 0.6, 0.38, C["card"], radius=0.19),
+                  text(s, x + 0.3, y + 0.74, w - 0.6, 0.38,
+                       [[("바꾼 것  ", {"color": C["violet"], "weight": "bold", "size": 11}),
+                         (what, {"color": C["ink"], "weight": "semibold"}),
+                         ("  →  ", {"color": C["mute"]}),
+                         (res, {"color": C["blue"], "weight": "extrabold"})]],
+                       size=12.5, align="c", anchor="m")]
     group(s, parts, f"anim{anim}_conclusion" if anim else "conclusion")
 
 
