@@ -183,10 +183,11 @@ def group(s, shapes, name):
 # 노트 아래쪽에는 질문 대비용 '보충 설명'(notes() 에 넘긴 긴 대본)이 붙는다.
 SCRIPTS = {
     1: ("표지", 10,
-        "Lab 1부터 6까지의 실습 방법을 그대로 따라가며, 신용위험 예측 문제를 풀어 본 과정을 발표하겠습니다."),
-    2: ("문제 정의", 25,
-        "데이터는 15만 명의 재무 정보가 담긴 Give Me Some Credit이고, 목표는 2년 안에 연체할지를 예측하는 이진 분류입니다. "
-        "진행은 Lecture 6의 AI 모델링 6단계를 따르고, 이 단계를 Lab 1부터 6까지 순서대로 밟아 가겠습니다."),
+        "신용위험 예측 모델링 발표를 시작하겠습니다."),
+    2: ("문제 정의", 20,
+        "데이터와 목표는 과제에서 미리 정해진 그대로 진행했습니다. 15만 명의 고객 중 2년 안에 연체할 사람을 예측하는 문제입니다. "
+        "발표는 이 데이터로 Lab 1부터 6까지 차례대로 해 보면서, 각 Lab에서 찾은 결과를 다음 Lab으로 넘겨주는 순서로 구성했습니다. "
+        "그렇게 하나씩 쌓아서 마지막에 최적의 방식을 찾아낸 과정을 보여 드리겠습니다."),
     3: ("Lab 1 · 진행", 10,
          "Lab 1의 일곱 단계를 15만 건에 그대로 적용했습니다. 파일 첫 줄이 열 이름이라 header=0만 더했습니다."),
     4: ("Lab 1 · 결과", 20,
@@ -705,8 +706,8 @@ stage_track(s, [1])
 text(s, 0.8, 0.55, 5.4, 0.35, "문제 정의", size=14, color=C["blue"], weight="semibold", name="!!kicker")
 text(s, 0.8, 0.98, 11.8, 0.9, "2년 내 연체 고객 예측 문제와 진행 단계", size=34, weight="extrabold",
      spacing=-1, name="!!title")
-stats = [("150,000", "명의 고객 데이터", C["ink"]), ("8 → 1", "입력 변수 8개로 연체 여부 1개 예측", C["ink"]),
-         ("6단계", "AI Modeling 과정을 Lab 1–6으로", C["blue"])]
+stats = [("사전 정의", "데이터·목표는 과제 기준 그대로", C["ink"]), ("Lab 1 → 6", "찾은 결과를 다음 Lab으로", C["ink"]),
+         ("0.50 → ?", "찍기 수준에서 최적 모델까지", C["blue"])]
 for i, (num, cap, col) in enumerate(stats):
     x = 0.8 + i * 3.95
     group(s, [rect(s, x, 2.1, 3.73, 1.7, C["card"], radius=0.22),
@@ -734,7 +735,7 @@ for i, (ko, en) in enumerate(STAGES, start=1):
     if i < 6:
         road.append(text(s, x + 1.86, 5.45, 0.12, 0.3, "›", size=14, color=C["mute"], align="c"))
 group(s, road, "anim4_road")
-text(s, 0.8, 6.75, 11.8, 0.3, "데이터: Kaggle Give Me Some Credit (2011)  ·  변수 설명: Han et al., NOTE, Scientific Reports 14 (2024)",
+text(s, 0.8, 6.75, 11.8, 0.3, "데이터: Kaggle Give Me Some Credit (2011), 일부 변수를 합친 과제 제공본  ·  변수 설명: Han et al., NOTE, Scientific Reports 14 (2024)",
      size=11, color=C["mute"])
 notes(s, """사용한 데이터는 Kaggle의 Give Me Some Credit으로, 15만 명의 재무 정보가 들어 있습니다.
 목표는 이 고객이 2년 안에 90일 이상 연체할지를 예측하는 이진 분류입니다.
