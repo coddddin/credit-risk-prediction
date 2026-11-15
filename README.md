@@ -27,12 +27,13 @@
 | 기준 | 모두 '정상'으로 찍기 | 0.500 | |
 | Lab 2 | 로그+표준화 + 로지스틱 회귀 | 0.824 | 치우친 4개 변수에 로그 변환 |
 | Lab 4 | + 연체자 가중치 | 0.844 | 연체자를 잡는 비율 1.3% → 75% |
-| Lab 5 | 데이터 정리 + 랜덤 포레스트 (잎 최소 176명) | 0.856 | 트리가 학습 데이터를 외우지 못하게 제한 |
+| Lab 5 | 데이터 정리 + 랜덤 포레스트 (잎 최소 176명) | 0.856 | 후보 4개(LR·KNN·AdaBoost·RF)를 같은 조건으로 튜닝해 RF 선택 |
 | Lab 6 | MLP (12-8, 배치 128, EarlyStopping) | 0.850 | 랜덤 포레스트를 넘지 못함 |
 | 보충 | 새 변수 + 튜닝한 그래디언트 부스팅 | **0.858** | 10조각 모두 우세, 차이는 +0.002 |
 
 - 정확도 93%인 로지스틱 회귀가 실제로는 연체자 3,309명 중 43명만 잡고 있었습니다. 학습할 때 연체자에 가중치를 주자 75%를 잡았고 AUC도 올랐습니다.
-- MLP, 랜덤 포레스트, 그래디언트 부스팅이 모두 0.85~0.858에 모였습니다. 모델을 바꿔서 얻을 몫은 거의 남지 않았고, 이 데이터 8개 변수의 한계에 가깝다고 판단했습니다.
+- MLP, 랜덤 포레스트, 그래디언트 부스팅이 모두 0.85~0.858에 모였습니다. 이번 실험 범위에서는 모델을 바꿔서 얻은 몫이 작았습니다.
+- 과제 목적인 '연체 확률'도 맞았습니다. Lab 모델의 평균 예측 연체 확률은 6.68%로 실제와 같았고, 가장 위험한 10%는 예측 32.4%, 실제 34.2%였습니다.
 - GAN으로 연체자 데이터를 만들어 늘리면 0.817로 오히려 떨어졌습니다. 같은 GAN도 데이터를 나누기 전에 늘리면 시험에 가짜 연체자가 섞여 0.950이 나왔습니다.
 - 위험 점수 상위 10%의 고객에 전체 연체자의 51%가 모여 있습니다. 연체자 1명을 놓친 손실을 정상 고객 5명을 거절한 손실과 같다고 보면, 판정 기준을 0.5가 아닌 0.17로 둘 때 손실이 31% 줄어듭니다.
 
@@ -42,9 +43,9 @@
 | --- | --- | --- | --- |
 | 1 데이터 로딩·기술통계 | 데이터가 어떻게 생겼나? | 기술통계, 클래스 분포, 상관, 왜도 | 연체 6.7%, 소득 대체값(6638/6746) 29,737행, 불가능한 연체 횟수(96/98) 269행 → 값을 어떻게 바꿔야 하나? |
 | 2 시각화·데이터 준비 | 어떤 변환이 맞나? | 분포 그림, MinMax·표준화·Normalizer·Binarizer·로그 비교 | 로그+표준화는 회귀에만, Binarizer는 트리에만 효과 → 변수가 다 필요한가? 평가는 믿을 만한가? |
-| 3 특성 선택·리샘플링 | 변수를 줄일까? 어떻게 시험할까? | SelectKBest, RFE, PCA, 트리 중요도 / 분할, k-fold, LOOCV, ShuffleSplit | 줄여도 이득 없음, 한 번 분할은 0.816~0.828로 흔들림 → 층화 10-fold로 통일 |
+| 3 특성 선택·리샘플링 | 변수를 줄일까? 어떻게 시험할까? | SelectKBest, RFE, PCA, 트리 중요도 / 분할, k-fold, LOOCV, ShuffleSplit | 회귀는 6개가 근소하게 나아 6개·8개 두 후보로 넘김(Lab 5에서 8개 확정), 한 번 분할은 0.816~0.828로 흔들림 → 층화 10-fold로 통일 |
 | 4 평가지표·알고리즘 비교 | 무엇으로 재고 무엇을 고르나? | 정확도·logloss·AUC·혼동행렬, LR·LDA·KNN·CART·NB·SVM | 연체자 43명만 잡던 문제를 가중치로 해결, 선형 모델이 강함 → 더 올릴 수 있나? |
-| 5 파이프라인·앙상블·튜닝 | 누수는 없었나? 더 올릴 수 있나? | Pipeline, Bagging·RF·AdaBoost·Voting, Grid·Random Search, 모델 저장 | 누수 영향 없음(0.8436 그대로), 잎 크기 튜닝으로 0.856 → 신경망은 넘을까? |
+| 5 파이프라인·앙상블·튜닝 | 누수는 없었나? 더 올릴 수 있나? | Pipeline, Bagging·RF·AdaBoost·Voting, 후보 4개 중첩 튜닝(Grid·Random), 모델 저장 | 표준화 누수 영향 없음(0.8436 그대로), 튜닝 후 RF 0.856이 최고 → 신경망은 넘을까? |
 | 6 Keras MLP | 15만 건으로 어떻게 학습시키나? | 배치 5종 × 150 에폭 측정, 10-fold, KerasClassifier, Grid Search | 배치 128을 골라 13배 단축, MLP 0.850 |
 | 보충 | 문헌의 방법을 쓰면? | 새 변수, 부스팅, Balanced RF, 쌓기, GAN 오버샘플링 | 부스팅만 근소하게 우세(+0.002), 늘리기는 효과 없음 |
 
@@ -58,8 +59,9 @@ Lab 자료의 예제는 768건짜리 데이터 기준이라, 15만 건에 그대
 
 | 단계 | Lab 그대로 쓰면 | 한 일 |
 | --- | --- | --- |
-| Lab 3 LOOCV | 1회 학습 0.49초 × 15만 회 ≈ 20시간, AUC 계산 불가 | 1,000건 표본으로만 확인 |
+| Lab 3 LOOCV | 1회 학습 0.49초 × 15만 회 ≈ 20시간, 조각별 AUC 계산 불가 | 층화 10-fold로 대체 (1,000건 표본으로 정확도만 확인) |
 | Lab 4 SVM | 데이터 2배에 시간 약 4배, 10-fold 약 1시간 | 1만 건 층화 표본에서 6개 알고리즘을 함께 비교 |
+| Lab 5 튜닝 | 후보 4개 × 설정 × 10-fold | 안쪽 3-fold로 설정을 고르고 병렬 계산 (후보 1개당 1~25분) |
 | Lab 6 MLP | 배치 10 · 150 에폭이면 모델 1개 26분, 10-fold 약 6시간 | 배치 5종을 150 에폭까지 모두 측정해 배치 128 선택 |
 | Lab 6 Grid Search | 54가지 × 3-fold, 이틀 이상 | 배치와 에폭은 위 실험과 EarlyStopping으로 정하고 optimizer × 초기화 6가지만 탐색 |
 
@@ -111,11 +113,14 @@ credit_project/
 │   ├── 04_lab4_metrics_algorithms.ipynb
 │   ├── 05_lab5_pipeline_ensemble_tuning.ipynb
 │   ├── 05b_lab5_final_model_full.ipynb      최종 RF를 15만 건 전체로 학습
+│   ├── 05c_feature_count_check.py           Lab 3 변수 후보 6개 vs 8개 비교
+│   ├── 05d_candidate_tuning.py              후보 4개(LR·KNN·AdaBoost·RF) 중첩 튜닝 비교
 │   ├── 06a_batch_epoch_experiment.py        배치 × 에폭 실험 (끊겨도 이어서 실행)
 │   ├── 06_lab6_mlp.ipynb
 │   ├── 07_literature_models.ipynb           보충: 문헌 방법
 │   ├── 08_gan_oversampling.ipynb            보충: GAN 오버샘플링
 │   ├── 09_optimal_vs_lab.ipynb              최종 비교, 비용 기준 판정값
+│   ├── 09b_calibration.py                   예측 확률과 실제 연체율 비교
 │   ├── keras_wrapper.py                     Keras 3용 KerasClassifier
 │   └── *.csv                                조각별 점수 등 실험 결과
 ├── figures/                   노트북이 만든 그림, Lab 자료 캡처(lab_captures/)
@@ -123,9 +128,13 @@ credit_project/
 │   ├── build_deck.py          발표 자료 생성 (python-pptx)
 │   ├── finalize.ps1           진입 애니메이션 추가, 글꼴 포함 저장, PDF 내보내기
 │   ├── lab_capture.py         Lab PDF에서 코드 부분 캡처
-│   ├── credit_presentation.pptx / .pdf
-│   └── script.md              7분 대본과 예상 질문 (build_deck.py가 함께 생성)
-├── docs/images/               README용 슬라이드 이미지
+│   ├── credit_presentation.pptx / .pdf   발표 자료 (본문 22장 + 부록 2장)
+│   ├── submitted/             제출본 PPT·PDF와 장별 PNG
+│   ├── script.md              PPT 버전 대본·보충 설명·예상 질문 (build_deck.py가 생성)
+│   ├── script_edit.md         제출 뒤 고치는 대본·예상 질문 (이 파일만 고치면 됨)
+│   ├── make_phone_script.py   script_edit.md → 폰용 대본 PDF (script_phone.pdf)
+│   └── render_png.ps1         PPT 각 장을 PNG로 내보내기
+├── docs/                      진행 상황(PROGRESS.md), 재검토 기록(REVIEW.md), README용 이미지
 ├── results.md                 모든 실험 숫자 기록
 └── requirements.txt
 ```
@@ -147,12 +156,17 @@ python -m ipykernel install --user --name credit-project
    cd notebooks
    jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.kernel_name=credit-project 01_lab1_loading_stats.ipynb
    ```
-   오래 걸리는 것: 05 약 20분, 06a 약 1시간, 06 약 50분, 07 약 40분, 09 약 15분 (CPU 기준).
+   오래 걸리는 것: 05 약 20분, 05d 약 1시간, 06a 약 1시간, 06 약 50분, 07 약 40분, 09 약 15분 (CPU 기준).
 3. 발표 자료를 만듭니다. 글꼴은 [Pretendard](https://github.com/orioncactus/pretendard)를 씁니다.
    ```sh
    cd slides
    python build_deck.py
    powershell -ExecutionPolicy Bypass -File finalize.ps1
+   ```
+4. 대본만 고칠 때 (PPT는 그대로): `slides/script_edit.md`를 고친 뒤 실행합니다.
+   ```sh
+   cd slides
+   python make_phone_script.py
    ```
 
 ## 알려진 한계

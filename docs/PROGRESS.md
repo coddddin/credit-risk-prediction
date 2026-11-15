@@ -1,4 +1,13 @@
-# 진행 상황 (2026-11-15 기준)
+# 진행 상황 (2026-11-16 새벽 기준)
+
+> **최신 상태는 [REVIEW.md](REVIEW.md)** — 재검토 결과, 제출 판단, 밤사이 바꾼 것(원본 → 수정), 아침에 정할 것, 제출 뒤 대본 고치는 법.
+
+- 제출본: `slides/submitted/credit_presentation.pptx` / `.pdf` (본문 22장 + 부록 2장, 대본 예상 6분 37초)
+- 제출 뒤 대본 수정: `slides/script_edit.md` 고치고 `python make_phone_script.py` → `slides/script_phone.pdf`
+
+---
+
+## 이전 기록 (2026-11-15)
 
 마감: **2026-11-18** (늦으면 50% 감점) · 발표 7분 · 발표자 수원대학교 컴퓨터SW학과 강희준
 
