@@ -1305,9 +1305,9 @@ lab_header(s, 4, 3, "평가지표 · 알고리즘 비교", "알고리즘 6개 �
                   ("KNN", "가장 가까운 5명의 다수결")])
 group(s, [rect(s, 0.8, 2.15, 6.0, 4.05, C["card"], radius=0.25),
           text(s, 1.1, 2.33, 5.4, 0.35, [[("알고리즘별 AUC  ", {"weight": "bold", "color": C["ink"]}),
-                                         ("15만 건 · 층화 10-fold · 상자 = 10번 시험의 범위", {"color": C["mute"]})]], size=13),
+                                         ("층화 10-fold · 상자 = 10번 시험의 가운데 50%", {"color": C["mute"]})]], size=13),
           s.shapes.add_picture(str(FIG / "lab4_compare.png"), Inches(1.0), Inches(2.78), width=Inches(5.6)),
-          text(s, 1.1, 5.72, 5.5, 0.3, "* SVM은 15만 건에 약 1시간이라 1만 건 표본으로 따로 비교(03) · 정확도는 모두 88~93%",
+          text(s, 1.1, 5.72, 5.5, 0.3, "* 음영 = SVM은 15만 건에 약 1시간이라 1만 건 표본으로 따로 비교 · 정확도는 모두 88~93%",
                size=10, color=C["mute"], weight="medium")],
       "anim1_chart")
 finds = [("01", "LDA 0.832 > LR 0.824 ≈ NB 0.822", "직선에 가까운 관계 → 선형 모델이 강함", C["blue"]),
