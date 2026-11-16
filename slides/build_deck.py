@@ -574,8 +574,7 @@ group(s, pill(s, 0.9, 5.15, 1.45, "Lab 1 → 6", C["blue_pale"], C["blue"])
       + pill(s, 4.36, 5.15, 1.25, "MLP", C["violet_pale"], C["violet"]), "anim2_pills")
 rect(s, 0.9, 6.35, 6.0, 0.012, C["line"])
 text(s, 0.9, 6.47, 6.5, 0.75,
-     [[("강희준", {"size": 19, "weight": "extrabold", "color": C["ink"]}),
-       ("", {"size": 15, "weight": "semibold", "color": C["sub"]})],
+     [[("강희준", {"size": 19, "weight": "extrabold", "color": C["ink"]})],
       [("수원대학교 컴퓨터SW학과", {"size": 12.5, "weight": "medium", "color": C["mute"]})]],
      size=15, line=1.25, name="presenter")
 code_window(s, 7.75, 1.9, 4.85, 3.35, "story.py", '''

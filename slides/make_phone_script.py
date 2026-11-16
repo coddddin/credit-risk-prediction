@@ -8,7 +8,7 @@
   python make_phone_script.py --init            # script_edit.md 를 처음 한 번 만든다 (이미 있으면 덮어쓰지 않음)
   python make_phone_script.py [png 폴더]         # → slides/script_phone.pdf
   python make_phone_script.py --tablet          # → slides/script_tablet.pdf (큰 화면, '자세한 질문/답' 사용)
-  png 폴더 기본값은 slides/submitted/png (제출한 PPT를 render_png.ps1 로 내보낸 그림)
+  png 폴더 기본값은 slides/public/png (공개본 PPT를 render_png.ps1 로 내보낸 그림), 없으면 slides/submitted/png
 한 장의 내용이 한 쪽을 넘으면 '(계속)' 쪽으로 이어진다.
 대본·답에서 **글자** 로 감싼 부분은 굵게 나온다. 맨 뒤에 부록 장(APPENDIX)의 그림 쪽이 붙는다.
 """
@@ -81,7 +81,7 @@ if "--init" in sys.argv:
 
 SLIDES = read_edit_file() if EDIT.exists() else from_build_deck()
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
-PNG = Path(args[0]) if args else HERE / "submitted" / "png"
+PNG = Path(args[0]) if args else next((p for p in (HERE / "public" / "png", HERE / "submitted" / "png") if p.exists()), HERE / "public" / "png")
 FONT = Path(os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\Windows\Fonts"))
 _cache = {}
 def f(w, s):

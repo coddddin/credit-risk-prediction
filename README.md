@@ -4,7 +4,7 @@
 
 **15만 명의 금융 정보로 2년 안에 연체할 고객을 예측하는 모델을, 수업의 Lab 1~6 방법을 순서대로 적용해 만들고 7분 발표 자료로 정리한 과제입니다. 이 README는 결과 요약과 함께, 8일 동안 무엇을 시도하고 왜 방향을 바꿨는지 적은 개발 일지입니다.**
 
-[발표 자료 PDF](slides/submitted/credit_presentation.pdf) · [실험 기록](results.md) · [개발 일지](#개발-일지) · [15만 건 처리](#15만-건을-어떻게-돌렸나) · [실행 방법](#실행-방법)
+[발표 자료 PDF](slides/public/credit_presentation.pdf) · [실험 기록](results.md) · [개발 일지](#개발-일지) · [15만 건 처리](#15만-건을-어떻게-돌렸나) · [실행 방법](#실행-방법)
 
 ![목차 슬라이드: 데이터·목표와 Lab 1~6, 최종 비교, 실무 점검으로 이어지는 발표 순서](docs/images/slide02.png)
 
@@ -180,7 +180,7 @@ credit_project/
 │   ├── build_deck.py          발표 자료 생성 (python-pptx) → _draft.pptx, script.md
 │   ├── finalize.ps1           진입 애니메이션, 글꼴 포함 저장, PDF (PowerPoint 필요)
 │   ├── lab_capture.py         Lab PDF에서 코드 부분 캡처
-│   ├── submitted/             제출본 PPT·PDF (본문 22장 + 부록 3장)와 장별 PNG
+│   ├── public/                발표 자료 공개본 PPT·PDF (본문 22장 + 부록 3장, 표지 학번 제외)와 장별 PNG
 │   ├── script_edit.md         발표 대본·예상 질문 (제출 뒤에도 이 파일만 고침)
 │   ├── make_phone_script.py   script_edit.md → 폰용 대본 PDF
 │   ├── script_phone.pdf       폰용 대본 (장마다 그림 + 대본 + 짧은 예상 질문, 부록 포함)

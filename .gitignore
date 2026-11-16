@@ -12,3 +12,5 @@ notebooks/*.err
 slides/script.md
 slides/credit_presentation.pptx
 slides/credit_presentation.pdf
+# 제출본(표지에 학번 포함)은 로컬·드라이브에만 둔다. 저장소에는 slides/public/ 공개본
+slides/submitted/
