@@ -183,7 +183,8 @@ credit_project/
 │   ├── submitted/             제출본 PPT·PDF (본문 22장 + 부록 3장)와 장별 PNG
 │   ├── script_edit.md         발표 대본·예상 질문 (제출 뒤에도 이 파일만 고침)
 │   ├── make_phone_script.py   script_edit.md → 폰용 대본 PDF
-│   ├── script_phone.pdf       폰용 대본 (장마다 그림 + 대본 + 예상 질문, 부록 포함)
+│   ├── script_phone.pdf       폰용 대본 (장마다 그림 + 대본 + 짧은 예상 질문, 부록 포함)
+│   ├── script_tablet.pdf      태블릿용 대본 (같은 구성, 예상 질문을 자세한 답으로)
 │   ├── qa_short.py            예상 질문 요약 원본
 │   └── render_png.ps1         PPT 각 장을 PNG로 내보내기
 ├── docs/images/               README용 그림
@@ -218,7 +219,8 @@ python -m ipykernel install --user --name credit-project
 4. 대본만 고칠 때 (PPT는 그대로): `slides/script_edit.md`를 고친 뒤 실행합니다. `**93%**`처럼 감싸면 굵게 나옵니다.
    ```sh
    cd slides
-   python make_phone_script.py
+   python make_phone_script.py            # 폰용
+   python make_phone_script.py --tablet   # 태블릿용 (자세한 질문·답)
    ```
 
 ## 알려진 한계

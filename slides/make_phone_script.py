@@ -7,6 +7,7 @@
 실행
   python make_phone_script.py --init            # script_edit.md 를 처음 한 번 만든다 (이미 있으면 덮어쓰지 않음)
   python make_phone_script.py [png 폴더]         # → slides/script_phone.pdf
+  python make_phone_script.py --tablet          # → slides/script_tablet.pdf (큰 화면, '자세한 질문/답' 사용)
   png 폴더 기본값은 slides/submitted/png (제출한 PPT를 render_png.ps1 로 내보낸 그림)
 한 장의 내용이 한 쪽을 넘으면 '(계속)' 쪽으로 이어진다.
 대본·답에서 **글자** 로 감싼 부분은 굵게 나온다. 맨 뒤에 부록 장(APPENDIX)의 그림 쪽이 붙는다.
@@ -60,7 +61,11 @@ def read_edit_file():
         if line.startswith("### 예상 질문"):
             in_qa = True
         elif in_qa and line.lstrip().startswith("- Q:"):
-            slides[cur][3].append([line.split("Q:", 1)[1].strip(), ""])
+            slides[cur][3].append([line.split("Q:", 1)[1].strip(), "", "", ""])
+        elif in_qa and line.lstrip().startswith("자세한 질문:") and slides[cur][3]:
+            slides[cur][3][-1][2] = line.split(":", 1)[1].strip()
+        elif in_qa and line.lstrip().startswith("자세한 답:") and slides[cur][3]:
+            slides[cur][3][-1][3] = line.split(":", 1)[1].strip()
         elif in_qa and line.lstrip().startswith("A:") and slides[cur][3]:
             slides[cur][3][-1][1] = line.split("A:", 1)[1].strip()
         elif not in_qa:
@@ -84,7 +89,13 @@ def f(w, s):
         _cache[w, s] = ImageFont.truetype(str(FONT / f"Pretendard-{w}.ttf"), s)
     return _cache[w, s]
 
-W, H, M, BOTTOM = 1080, 1920, 64, 1885   # 폰 세로 화면 비율
+TABLET = "--tablet" in sys.argv
+if TABLET:   # 태블릿 세로 3:4 · 자세한 질문/답
+    W, H, M, BOTTOM = 1536, 2048, 80, 2000
+    SZ = dict(head=48, name=40, tag=34, body=40, body_lh=60, q=36, q_lh=52, a=33, a_lh=50, shot=0.55)
+else:        # 폰 세로 9:16 · 짧은 답
+    W, H, M, BOTTOM = 1080, 1920, 64, 1885
+    SZ = dict(head=44, name=38, tag=32, body=42, body_lh=64, q=33, q_lh=46, a=31, a_lh=43, shot=0.62)
 INK, SUB, MUTE, BLUE, VIOLET, BG, LINE, PALE = "#191F28", "#4E5968", "#8B95A1", "#3182F6", "#7C5CFF", "#FFFFFF", "#E5E8EB", "#F5F3FF"
 measure = ImageDraw.Draw(Image.new("RGB", (1, 1)))
 
@@ -178,24 +189,30 @@ for n in sorted(SLIDES):
     spoken += est
     rows = []
     for sent in re.split(r"(?<=[.?!])\s+", text.strip()):
-        rows += paragraph(sent, f("Medium", 42), INK, 64, 14, bold=f("ExtraBold", 42), bold_color=BLUE)
+        rows += paragraph(sent, f("Medium", SZ["body"]), INK, SZ["body_lh"], 14, bold=f("ExtraBold", SZ["body"]), bold_color=BLUE)
     if qa:
         rows.append(("__qa__", None, None, 80, 0))
-        for i, (q, ans) in enumerate(qa, 1):
-            rows += paragraph(f"Q{i}. {q}", f("Bold", 33), VIOLET, 46, 2)
-            rows += paragraph(ans, f("Regular", 31), SUB, 43, 14, indent=26, bold=f("Bold", 31), bold_color=VIOLET)
+        for i, item in enumerate(qa, 1):
+            q, ans = item[0], item[1]
+            if TABLET and len(item) > 3:
+                q, ans = item[2] or q, item[3] or ans
+            rows += paragraph(f"Q{i}. {q}", f("Bold", SZ["q"]), VIOLET, SZ["q_lh"], 4)
+            rows += paragraph(ans, f("Regular", SZ["a"]), SUB, SZ["a_lh"], 22 if TABLET else 14, indent=26,
+                              bold=f("Bold", SZ["a"]), bold_color=VIOLET)
 
     def new_page(first):
         page = Image.new("RGB", (W, H), BG)
         d = ImageDraw.Draw(page)
-        d.text((M, 56), f"{n} / {len(SLIDES)}", font=f("ExtraBold", 44), fill=BLUE)
-        d.text((M + 170, 62), name + ("" if first else "  · 예상 질문 (계속)"), font=f("SemiBold", 38), fill=SUB)
+        head = f"{n} / {len(SLIDES)}"
+        d.text((M, 56), head, font=f("ExtraBold", SZ["head"]), fill=BLUE)
+        d.text((M + d.textlength(head, font=f("ExtraBold", SZ["head"])) + 30, 62),
+               name + ("" if first else "  · 예상 질문 (계속)"), font=f("SemiBold", SZ["name"]), fill=SUB)
         tag = f"{secs}초 · 누적 {elapsed // 60}:{elapsed % 60:02d}"
-        d.text((W - M - d.textlength(tag, font=f("Medium", 32)), 66), tag, font=f("Medium", 32), fill=MUTE)
+        d.text((W - M - d.textlength(tag, font=f("Medium", SZ["tag"])), 66), tag, font=f("Medium", SZ["tag"]), fill=MUTE)
         y = 150
         if first:
             shot = Image.open(PNG / f"slide{n:02d}.png").convert("RGB")
-            sw = int((W - 2 * M) * 0.62)
+            sw = int((W - 2 * M) * SZ["shot"])
             shot = shot.resize((sw, int(shot.height * sw / shot.width)), Image.LANCZOS)
             page.paste(shot, (M, 140))
             d.rectangle([M, 140, M + sw, 140 + shot.height], outline=LINE, width=2)
@@ -208,8 +225,9 @@ for n in sorted(SLIDES):
             pages.append(page)
             page, d, y = new_page(False)
         if txt == "__qa__":
-            d.rounded_rectangle([M, y + 12, M + 200, y + 64], radius=26, fill=PALE)
-            d.text((M + 26, y + 19), "예상 질문", font=f("Bold", 31), fill=VIOLET)
+            lab = "예상 질문" + (" (자세히)" if TABLET else "")
+            d.rounded_rectangle([M, y + 12, M + 52 + d.textlength(lab, font=f("Bold", 31)), y + 64], radius=26, fill=PALE)
+            d.text((M + 26, y + 19), lab, font=f("Bold", 31), fill=VIOLET)
         elif txt:
             x = M + ind
             for s, fnt, col in txt:
@@ -239,7 +257,7 @@ for no, title, line, related in APPENDIX:
     d.text((M, y + 20), f"관련: {related}", font=f("Medium", 34), fill=MUTE)
     pages.append(page)
 
-out = HERE / "script_phone.pdf"
+out = HERE / ("script_tablet.pdf" if TABLET else "script_phone.pdf")
 pages[0].save(out, save_all=True, append_images=pages[1:], resolution=150)
 src = EDIT.name if EDIT.exists() else "build_deck.py"
 print(f"saved {out} · {len(pages)}쪽 (발표 {len(SLIDES)}장 + 부록, 원본 {src}) · "
