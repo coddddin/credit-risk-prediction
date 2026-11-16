@@ -221,7 +221,7 @@ SCRIPTS = {
     19: ("Lab 6 · 결과", 20,
          '배치 다섯 가지를 150 에폭, 즉 데이터를 150번 볼 때까지 재 보니 AUC는 거의 같았고 시간은 100배 가까이 차이 났습니다. 그래서 배치 10보다 13배 빠르고 성능은 같은 128을 골랐습니다.'),
     20: ("Lab 6 · 발견·결론", 23,
-         'MLP는 AUC 0.850으로, 튜닝한 랜덤 포레스트 0.856보다 조금 낮았고 학습은 16배 느렸습니다. 변수 8개짜리 표 데이터에서는 트리를 합친 모델이 더 효율적이라, Lab 범위의 최종 모델은 랜덤 포레스트로 정했습니다.'),
+         'MLP는 AUC 0.850으로, 튜닝한 랜덤 포레스트 0.856보다 조금 낮았고 학습은 10배 느렸습니다. 변수 8개짜리 표 데이터에서는 트리를 합친 모델이 더 효율적이라, Lab 범위의 최종 모델은 랜덤 포레스트로 정했습니다.'),
     21: ("최종 모델 비교", 20,
          "Lab 과정으로 만든 랜덤 포레스트와, Lab 밖 논문 방법인 새 변수와 부스팅을 더한 최적 모델을 같은 방법으로 비교했습니다. 최적 모델이 0.858로 열 조각 모두에서 높았지만 차이는 0.002였습니다. 그럼 이렇게 만든 최종 모델, 실무에서도 쓸 수 있을까요?"),
     22: ("실무 점검 · 결론", 45,
@@ -267,7 +267,7 @@ QA = {
     16: [('누수를 막았는데 왜 AUC가 같나?',
           '로그 변환은 값마다 따로 계산해 누수가 없고, 표준화는 평균·표준편차를 쓰는데 15만 건에서는 fold마다 거의 같다. 데이터가 작으면 차이가 날 수 있다.')],
     17: [('왜 RF를 골랐나? AdaBoost는 기본 설정 1등이었는데?',
-          '네 후보를 같은 중첩 교차검증으로 튜닝하니 RF 0.856, AdaBoost 0.852(트리 1,000개), KNN 0.848(이웃 500명), LR 0.844였다. 같은 조각끼리 RF가 AdaBoost보다 10번 모두 높았고(+0.004), 학습도 약 4초 vs 71초로 빨랐다. AdaBoost는 트리를 300 → 1,000개로 늘려도 +0.001이라 더 늘려도 따라잡기 어렵다고 판단했다.'),
+          '네 후보를 같은 중첩 교차검증으로 튜닝하니 RF 0.856, AdaBoost 0.852(트리 1,000개), KNN 0.848(이웃 500명), LR 0.844였다. 같은 조각끼리 RF가 AdaBoost보다 10번 모두 높았고(+0.004), 학습 시간도 같은 실행에서 약 1/18(3.9초 vs 71초, 13.5만 건)이었다. AdaBoost는 트리를 300 → 1,000개로 늘려도 +0.001이라 더 늘려도 따라잡기 어렵다고 판단했다.'),
          ('튜닝 비교가 공정한가?',
           '바깥 층화 10-fold(지금까지와 같은 조각)로 평가하고, 설정은 각 바깥 학습 구간 안의 3-fold로만 골랐다. 시험 조각은 설정 선택에 쓰지 않았다(notebooks/05d_candidate_tuning.py). 1차에서 AdaBoost·KNN이 범위 끝을 골라 범위를 넓혀 다시 했다.')],
     18: [('배치와 에폭은 무엇인가?',
@@ -1326,7 +1326,7 @@ lparts += [rect(s, 1.05, 4.9, 5.1, 0.95, C["bg"], radius=0.16),
            rect(s, 1.05, 5.97, 5.1, 0.88, C["bg"], radius=0.16),
            text(s, 1.3, 5.97, 4.7, 0.88,
                 [[("데이터 정리 효과 ≈ 0", {"weight": "bold", "color": C["ink"]}), ("  96/98 코드는 연체율 54.6%지만", {"color": C["sub"]})],
-                 [("'연체 이력' 변수에 이미 담겨 있었다", {"color": C["sub"]})]],
+                 [("'연체 이력' 변수에 이미 담겨 있었다 · 96/98·소득 채운 값 정리 전후 차이 미미", {"color": C["sub"]})]],
                 size=12.5, weight="medium", anchor="m", line=1.3)]
 group(s, lparts, "anim1_pipe")
 group(s, [rect(s, 6.6, 2.15, 5.93, 4.9, C["card"], radius=0.25),
@@ -1360,7 +1360,7 @@ def _cand(name):
     return dict(base=base, tuned=g.tuned_auc.mean(), folds=g.tuned_auc.values, params=p)
 CAND = {n: _cand(n) for n in ["RF", "AdaBoost", "KNN", "LR"]}
 _mode = lambda p, col: p[col].mode()[0]
-CAND["RF"]["pick"] = f"잎 최소 {int(_mode(CAND['RF']['params'], 'min_samples_leaf'))}명"
+CAND["RF"]["pick"] = f"잎 최소 {L5['final_leaf']}명*"
 CAND["AdaBoost"]["pick"] = (f"트리 {int(_mode(CAND['AdaBoost']['params'], 'n_estimators'))} · "
                             f"학습률 {_mode(CAND['AdaBoost']['params'], 'learning_rate'):g}")
 CAND["KNN"]["pick"] = f"이웃 {int(_mode(CAND['KNN']['params'], 'n_neighbors'))}명"
@@ -1410,12 +1410,13 @@ for i, row in enumerate(rows17):
         else:
             set_font(r, 12.5 if j == 0 else 11, "bold" if j == 0 else "medium", C["violet"] if (win and j == 0) else C["ink"])
 lp.append(s.shapes[-1])
-lp.append(text(s, 1.0, 5.86, 5.6, 0.28, f"* 최종 RF는 Lab 5 Random Search의 잎 {L5['final_leaf']}명 (50명 이상이면 AUC 거의 같음)",
-                size=10, color=C["mute"], weight="medium"))
+lp.append(text(s, 1.0, 5.8, 5.7, 0.4, [f"* 중첩 탐색은 주로 100명을 골랐지만 50명 이상이면 AUC가 거의 같아 Lab 5의 {L5['final_leaf']}명 유지",
+                                        "  기본값 0.826은 정리 단계 포함 (16장 원본 RF는 0.824)"],
+                size=9.5, color=C["mute"], weight="medium", line=1.15))
 group(s, lp, "anim1_table")
 _jump = max(CAND, key=lambda n: CAND[n]["tuned"] - CAND[n]["base"])
 finds = [("01", f"{_best} 선택: 튜닝 후 최고 {CAND[_best]['tuned']:.3f}",
-          f"{_second}보다 10번 중 {(_diff > 0).sum()}번 높음 ({_diff.mean():+.3f}) · 학습 {_fit(_best):.0f}초 vs {_fit(_second):.0f}초", C["blue"]),
+          f"{_second}보다 10번 중 {(_diff > 0).sum()}번 높음 ({_diff.mean():+.3f}) · 학습 시간 약 1/{_fit(_second) / _fit(_best):.0f}", C["blue"]),
          ("02", f"튜닝 효과 최대: {_jump} {CAND[_jump]['base']:.3f} → {CAND[_jump]['tuned']:.3f}",
           f"설정 하나({why[_jump][0]})로 크게 바뀜 · LR은 그대로", C["blue"]),
          ("03", "Lab 3 후보 비교: 8개 0.856 > 6개 0.855", f"10번 중 8번 8개 우세 → 8개 확정 · 저장 후에도 {L5['test_auc']:.3f}", C["blue"])]
@@ -1449,13 +1450,13 @@ L6 = dict(
     n_params=221, final_sec=50, final_epochs=28,
     title="MLP는 0.850으로, 튜닝한 랜덤 포레스트(0.856)를 넘지 못했다",
     vs_rf_head="RF 0.856보다 0.006 낮음",
-    vs_rf_body="15만 건 학습도 RF 3초 vs MLP 50초 (약 16배)",
+    vs_rf_body="15만 건 학습도 RF 5초 vs MLP 50초 (약 10배)",
     concl1="Lab 범위 최종: 정리 + RF(잎 176명), AUC 0.856",
-    concl2="MLP 이점 없음: AUC −0.006 · 학습 시간 16배",
+    concl2="MLP 이점 없음: AUC −0.006 · 학습 시간 10배",
     tracker="0.856",
     notes="""MLP를 층화 10-fold로 평가한 AUC는 0.850, 흔들림은 0.008이었습니다. EarlyStopping 덕분에 fold당 평균 43 에폭에서 멈췄고, fold 하나에 평균 67초가 걸렸습니다.
 Lab 6 Grid Search대로 optimizer 두 가지와 초기화 세 가지를 바꿔 봤지만 0.849에서 0.850 사이로, 차이가 흔들림보다 훨씬 작았습니다. Lab 기본값인 adam과 glorot이 가장 높았습니다.
-그래서 신경망은 튜닝한 랜덤 포레스트 0.856보다 0.006 낮았습니다. 흔들림 범위 안이라 거의 같은 수준이지만, 15만 건 학습에 랜덤 포레스트는 3초, MLP는 50초가 걸렸고, 어떤 변수 때문에 위험하다고 봤는지 설명하기도 어렵습니다.
+그래서 신경망은 튜닝한 랜덤 포레스트 0.856보다 0.006 낮았습니다. 흔들림 범위 안이라 거의 같은 수준이지만, 15만 건 학습에 랜덤 포레스트는 5초, MLP는 50초가 걸렸습니다.
 변수가 8개뿐이고 관계가 비교적 단순한 표 형태 데이터에서는 트리 앙상블이 신경망보다 효율적이라는 뜻입니다. 참고한 논문에서도 같은 데이터에서 신경망이 트리 계열과 비슷하거나 조금 낮았습니다.
 목표 관점의 결론은, Lab 범위의 최종 모델은 데이터 정리와 잎 최소 176명 랜덤 포레스트로 정하고, MLP는 비교 결과로 남긴다는 것입니다.""")
 if L6 is None:
@@ -1755,7 +1756,7 @@ rowsA = [("단계", "15만 건에서 생긴 문제", "선택한 방법", "결과
          ("Lab 5 · 튜닝", "후보 4개 × 설정 × 10-fold", "안쪽 3-fold로 설정 선택 · 병렬 계산", "RF 0.856 선택"),
          ("Lab 6 · MLP 학습", "배치 10이면 모델 1개 26분 · 10-fold 약 6시간", "배치 128 + EarlyStopping", "fold당 67초 · 0.850"),
          ("Lab 6 · Grid Search", "54가지 × 3-fold → 이틀 이상", "배치는 따로 재고 격자는 6가지로", "0.849 ~ 0.850"),
-         ("최종 모델", "15만 건 전체 학습", "정리 + RF (잎 176명)", "학습 3초 · 5.5 MB")]
+         ("최종 모델", "15만 건 전체 학습", "정리 + RF (잎 176명)", "학습 5초 · 5.5 MB")]
 cwA = [2.0, 3.85, 3.45, 2.4]
 tA = s.shapes.add_table(len(rowsA), 4, Inches(0.8), Inches(2.15), Inches(sum(cwA)), Inches(0.6 * len(rowsA))).table
 for j, w in enumerate(cwA):
@@ -1876,7 +1877,7 @@ for i in range(len(lit_rows) + 1):
             r = p.add_run(); r.text = "–" if base_row else f"{(diff > 0).sum()}/10"
             set_font(r, 11.5, "semibold", C["sub"])
 lparts.append(s.shapes[-1])
-lparts.append(text(s, 1.1, 5.24, 5.6, 0.25, "근거: Ichim & Issa 2025 · Gidlow 2022 · Kaggle 2011 1위 풀이",
+lparts.append(text(s, 1.1, 5.24, 5.6, 0.25, "새 변수 4개: 월 부채액 · 1인당 소득 · 월 잔액 · 사용 비율>1 표시 (근거: Ichim & Issa 2025 외)",
                    size=9.5, color=C["mute"], weight="medium"))
 group(s, lparts, "anim1_lit")
 group(s, [rect(s, 7.1, 2.15, 5.43, 3.4, C["card"], radius=0.25),
