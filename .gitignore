@@ -6,3 +6,9 @@ data/*.csv
 *.keras
 slides/_draft.pptx
 notebooks/weights.out
+# 실행 기록 · 빌드 결과 (제출본은 slides/submitted/)
+notebooks/*.log
+notebooks/*.err
+slides/script.md
+slides/credit_presentation.pptx
+slides/credit_presentation.pdf
