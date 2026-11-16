@@ -223,7 +223,7 @@ SCRIPTS = {
     20: ("Lab 6 · 발견·결론", 23,
          'MLP는 AUC 0.850으로, 튜닝한 랜덤 포레스트 0.856보다 조금 낮았고 학습은 16배 느렸습니다. 변수 8개짜리 표 데이터에서는 트리를 합친 모델이 더 효율적이라, Lab 범위의 최종 모델은 랜덤 포레스트로 정했습니다.'),
     21: ("보충 실험 · 문헌·GAN", 20,
-         'Lab 밖에서 논문의 방법도 더해 봤습니다. 새 변수와 부스팅은 열 조각 중 아홉에서 이겼지만 차이는 0.002였고, GAN으로 가짜 연체자를 만들어 늘리자 오히려 0.817로 떨어졌습니다.'),
+         'Lab 밖에서 논문의 방법도 더해 봤습니다. 새 변수와 부스팅은 열 조각 중 아홉에서 이겼지만 차이는 0.002였고, GAN으로 가짜 연체자를 만들어 늘리자 오히려 0.817로 떨어졌습니다. 결국 Lab 과정의 랜덤 포레스트가 이미 최적에 가까웠고, 불균형은 데이터를 늘리기보다 가중치로 다루는 게 나았습니다.'),
     22: ("최종 결론", 35,
          'Lab 밖 방법까지 더한 최적 모델은 0.858로, 열 조각 모두에서 높았지만 차이는 0.002였습니다. 은행 입장에서는 위험 상위 10%만 심사해도 연체자의 절반을 잡고, 연체자 한 명 놓치는 손해를 정상 고객 다섯 명 거절과 같다고 보면, 같은 모델에서 기준만 0.17로 낮춰도 손해가 31% 줄어듭니다. 이번 과제에서 가장 흥미로웠던 점은 데이터 형식, 전처리, 알고리즘을 바꿀 때마다 결과가 달라졌다는 것이고, 신경망이라고 당연히 좋은 것은 아니었습니다.'),
 }
@@ -1569,7 +1569,7 @@ L6 = dict(
     vs_rf_head="RF 0.856보다 0.006 낮음",
     vs_rf_body="15만 건 학습도 RF 3초 vs MLP 50초 (약 16배)",
     concl1="Lab 범위 최종: 정리 + RF(잎 176명), AUC 0.856",
-    concl2="MLP는 비슷하지만 느리고 설명이 어렵다",
+    concl2="MLP 이점 없음: AUC −0.006 · 학습 시간 16배",
     tracker="0.856",
     notes="""MLP를 층화 10-fold로 평가한 AUC는 0.850, 흔들림은 0.008이었습니다. EarlyStopping 덕분에 fold당 평균 43 에폭에서 멈췄고, fold 하나에 평균 67초가 걸렸습니다.
 Lab 6 Grid Search대로 optimizer 두 가지와 초기화 세 가지를 바꿔 봤지만 0.849에서 0.850 사이로, 차이가 흔들림보다 훨씬 작았습니다. Lab 기본값인 adam과 glorot이 가장 높았습니다.
@@ -1740,15 +1740,15 @@ lit_rows = [("새 변수 + 부스팅", "D 새 변수 + 부스팅", "Ichim & Issa
             ("기준: 정리 + RF (Lab 5)", "A 기준: 정리 + RF (Lab 5)", "Lab 1~6"),
             ("쌓기 (RF·부스팅·LR)", "H 새 변수 + 쌓기 (RF·부스팅·LR → LR)", "Kaggle 2011 1위"),
             ("Balanced RF (잎 1)", "F 새 변수 + Balanced RF (잎 1)", "Ichim & Issa 2025")]
-lparts = [rect(s, 0.8, 2.15, 6.1, 4.9, C["card"], radius=0.25),
-          text(s, 1.1, 2.32, 5.6, 0.35, [[("① 문헌 방법  ", {"weight": "bold"}),
+lparts = [rect(s, 0.8, 2.15, 6.1, 3.4, C["card"], radius=0.25),
+          text(s, 1.1, 2.29, 5.6, 0.35, [[("① 문헌 방법  ", {"weight": "bold"}),
                                          ("같은 10조각에서 기준과 조각별 비교", {"color": C["mute"]})]], size=12, weight="medium")]
-tbl = s.shapes.add_table(len(lit_rows) + 1, 4, Inches(1.05), Inches(2.8), Inches(5.6), Inches(3.3)).table
+tbl = s.shapes.add_table(len(lit_rows) + 1, 4, Inches(1.05), Inches(2.68), Inches(5.6), Inches(2.5)).table
 for j, w in enumerate([2.35, 1.0, 1.15, 1.1]):
     tbl.columns[j].width = Inches(w)
-hdr = ["방법 (근거)", "AUC", "기준 대비", "이긴 조각"]
+hdr = ["방법", "AUC", "기준 대비", "이긴 조각"]
 for i in range(len(lit_rows) + 1):
-    tbl.rows[i].height = Inches(0.42 if i == 0 else 0.48)
+    tbl.rows[i].height = Inches(0.34 if i == 0 else 0.36)
     for j in range(4):
         cell = tbl.cell(i, j)
         cell.margin_left = cell.margin_right = Inches(0.06)
@@ -1764,7 +1764,6 @@ for i in range(len(lit_rows) + 1):
         col = LIT[key]; diff = col - LBASE
         if j == 0:
             r = p.add_run(); r.text = label; set_font(r, 11, "semibold", C["ink"])
-            p2 = cell.text_frame.add_paragraph(); r2 = p2.add_run(); r2.text = src; set_font(r2, 8.5, "medium", C["mute"])
         elif j == 1:
             r = p.add_run(); r.text = f"{col.mean():.4f}"; set_font(r, 11.5, "bold", C["ink"])
         elif j == 2:
@@ -1774,19 +1773,28 @@ for i in range(len(lit_rows) + 1):
             r = p.add_run(); r.text = "–" if base_row else f"{(diff > 0).sum()}/10"
             set_font(r, 11.5, "semibold", C["sub"])
 lparts.append(s.shapes[-1])
-lparts.append(text(s, 1.1, 6.3, 5.6, 0.6, [[("가장 나은 방법도 +0.0016", {"weight": "bold", "color": C["ink"]}),
-                                            ("  · 모두 0.85~0.857에 모임", {"color": C["sub"]})]], size=12.5, weight="medium"))
+lparts.append(text(s, 1.1, 5.24, 5.6, 0.25, "근거: Ichim & Issa 2025 · Gidlow 2022 · Kaggle 2011 1위 풀이",
+                   size=9.5, color=C["mute"], weight="medium"))
 group(s, lparts, "anim1_lit")
-group(s, [rect(s, 7.1, 2.15, 5.43, 3.55, C["card"], radius=0.25),
-          text(s, 7.4, 2.32, 5.0, 0.35, [[("② GAN으로 연체자 늘리기  ", {"weight": "bold"}),
+group(s, [rect(s, 7.1, 2.15, 5.43, 3.4, C["card"], radius=0.25),
+          text(s, 7.4, 2.29, 5.0, 0.35, [[("② GAN으로 연체자 늘리기  ", {"weight": "bold"}),
                                          ("NOTE 논문 방식 · 분류기는 같은 RF", {"color": C["mute"]})]], size=12, weight="medium"),
-          s.shapes.add_picture(str(FIG / "lab8_gan_compare.png"), Inches(7.3), Inches(2.78), width=Inches(5.05))],
+          s.shapes.add_picture(str(FIG / "lab8_gan_compare.png"), Inches(7.55), Inches(2.72), width=Inches(4.55))],
       "anim2_gan")
-group(s, [rect(s, 7.1, 5.85, 5.43, 1.2, C["red_pale"], radius=0.2),
-          text(s, 7.35, 5.85, 5.0, 1.2,
-               [[("나누기 전에 늘리면 0.817 → 0.950", {"weight": "extrabold", "color": C["red"], "size": 15})],
-                [("시험에 가짜 연체자가 섞여 부풀려짐 → 늘리기는 학습 데이터에서만", {"color": C["sub"]})]],
-               size=12, weight="medium", anchor="m", line=1.35)], "anim3_leak")
+# 보충 실험의 결론 (발표 흐름에서 이 장이 무엇을 알려 주는지)
+num = lambda k: (k, {"color": C["violet"], "weight": "bold"})
+group(s, [rect(s, 0.8, 5.65, 11.73, 1.42, C["violet_pale"], radius=0.22),
+          rect(s, 1.1, 5.85, 0.06, 0.36, C["violet"]),
+          text(s, 1.3, 5.8, 2.2, 0.45, "보충 실험의 결론", size=16, weight="bold", color=C["violet"]),
+          text(s, 1.3, 6.22, 2.3, 0.7, ["Lab 밖 방법을 더해도", "크게 달라지지 않았다"], size=11.5, color=C["sub"], weight="medium", line=1.3),
+          text(s, 3.75, 5.78, 8.6, 1.2,
+               [[num("① "), ("문헌 방법을 더해도 최고 ", {}), ("+0.0016", {"weight": "bold"}),
+                 (" (새 변수 + 부스팅) → Lab 모델(0.856)이 이미 최적에 가까움", {})],
+                [num("② "), ("데이터 늘리기는 효과 없음 ", {}), ("(GAN 0.817 < 0.856)", {"weight": "bold"}),
+                 (" → 불균형은 Lab 4의 연체자 가중치로", {})],
+                [num("③ "), ("나누기 전에 늘리면 ", {}), ("0.950", {"weight": "bold", "color": C["red"]}),
+                 ("으로 부풀려짐 → 늘리기는 학습 데이터에서만", {})]],
+               size=13.5, weight="medium", line=1.4)], "anim3_concl21")
 notes(s, """Lab 밖에서, 문헌에서 이 데이터에 효과가 있었다고 보고한 방법을 하나씩 더해 봤습니다. 비교는 Lab과 같은 층화 10조각에서, 조각마다 기준 모델과의 차이를 계산했습니다.
 가장 나은 것은 새 변수와 그래디언트 부스팅으로 0.8573이었고, 10조각 중 9조각에서 기준보다 높았지만 차이는 0.0016으로 매우 작았습니다. Balanced RF는 잎 크기에 따라 갈렸고, 여러 모델을 쌓는 방법은 오히려 낮아졌습니다.
 오른쪽은 교수님 논문 NOTE처럼 GAN으로 연체자 데이터를 만들어 늘린 실험입니다. 늘리기는 각 조각의 학습 데이터 안에서만 하고, 시험은 진짜 고객으로만 했습니다.
