@@ -128,7 +128,7 @@ credit_project/
 │   ├── build_deck.py          발표 자료 생성 (python-pptx)
 │   ├── finalize.ps1           진입 애니메이션 추가, 글꼴 포함 저장, PDF 내보내기
 │   ├── lab_capture.py         Lab PDF에서 코드 부분 캡처
-│   ├── credit_presentation.pptx / .pdf   발표 자료 (본문 22장 + 부록 2장)
+│   ├── credit_presentation.pptx / .pdf   발표 자료 (표지·목차 포함 본문 23장 + 부록 2장)
 │   ├── submitted/             제출본 PPT·PDF와 장별 PNG
 │   ├── script.md              PPT 버전 대본·보충 설명·예상 질문 (build_deck.py가 생성)
 │   ├── script_edit.md         제출 뒤 고치는 대본·예상 질문 (이 파일만 고치면 됨)
