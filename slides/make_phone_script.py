@@ -9,6 +9,7 @@
   python make_phone_script.py [png 폴더]         # → slides/script_phone.pdf
   png 폴더 기본값은 slides/submitted/png (제출한 PPT를 render_png.ps1 로 내보낸 그림)
 한 장의 내용이 한 쪽을 넘으면 '(계속)' 쪽으로 이어진다.
+대본·답에서 **글자** 로 감싼 부분은 굵게 나온다. 맨 뒤에 부록 장(APPENDIX)의 그림 쪽이 붙는다.
 """
 import os, re, sys
 from pathlib import Path
@@ -88,6 +89,59 @@ INK, SUB, MUTE, BLUE, VIOLET, BG, LINE, PALE = "#191F28", "#4E5968", "#8B95A1", 
 measure = ImageDraw.Draw(Image.new("RGB", (1, 1)))
 
 
+APPENDIX = [(23, "부록 A · 15만 건 처리", "데이터는 줄이지 않고 방법을 바꿨다 (LOOCV · SVM · 튜닝 · MLP)", "9 · 12 · 18장 질문"),
+            (24, "부록 B · 예측 확률 점검", "평균 예측 6.68% = 실제 6.68% · 그래서 기준 0.17 ≈ 이론값 1/6", "22장 질문"),
+            (25, "부록 C · 보충 실험", "문헌 방법 +0.0016 · GAN 0.817 < 0.856 · 나누기 전에 늘리면 0.950", "13 · 21장 질문")]
+
+
+def runs(text):
+    """'**굵게**' 표시를 (글, 굵게 여부) 조각으로."""
+    return [(s, i % 2 == 1) for i, s in enumerate(text.split("**")) if s]
+
+
+def rich_wrap(text, font, bold, width):
+    """굵게 표시를 지키며 어절 단위로 줄바꿈 → 줄마다 [(글, 굵게)] 목록."""
+    chars = [(c, b) for s, b in runs(text) for c in s]
+    words, cur, depth = [], [], 0
+    for c, b in chars:
+        depth += (c == "[") - (c == "]")
+        if c == " " and depth == 0:   # [23p 부록 A] 같은 표시는 한 줄에 둔다
+            words.append(cur); cur = []
+        else:
+            cur.append((c, b))
+    words.append(cur)
+
+    def width_of(cs):
+        out, i = 0, 0
+        while i < len(cs):
+            j = i
+            while j < len(cs) and cs[j][1] == cs[i][1]:
+                j += 1
+            out += measure.textlength("".join(c for c, _ in cs[i:j]), font=bold if cs[i][1] else font)
+            i = j
+        return out
+
+    lines, line = [], []
+    for w in words:
+        test = line + ([(" ", False)] if line else []) + w
+        if width_of(test) <= width or not line:
+            line = test
+        else:
+            lines.append(line); line = w
+    if line:
+        lines.append(line)
+    merged = []
+    for ln in lines:
+        seg = []
+        for c, b in ln:
+            if seg and seg[-1][1] == b:
+                seg[-1] = (seg[-1][0] + c, b)
+            else:
+                seg.append((c, b))
+        merged.append(seg)
+    return merged
+
+
 def wrap(text, font, width):
     """한국어는 어절 단위로, 너무 긴 어절은 글자 단위로 줄바꿈."""
     lines, cur = [], ""
@@ -108,9 +162,11 @@ def wrap(text, font, width):
     return lines
 
 
-def paragraph(text, font, color, lh, after, indent=0):
-    """줄 목록 (글, 글꼴, 색, 줄 높이, 들여쓰기) + 끝 간격."""
-    rows = [(ln, font, color, lh, indent) for ln in wrap(text, font, W - 2 * M - indent)]
+def paragraph(text, font, color, lh, after, indent=0, bold=None, bold_color=None):
+    """줄 목록 (줄 조각, 글꼴, 색, 줄 높이, 들여쓰기) + 끝 간격. 줄 조각 = [(글, 글꼴, 색)]."""
+    bold, bold_color = bold or font, bold_color or color
+    rows = [([(s, bold if b else font, bold_color if b else color) for s, b in ln], font, color, lh, indent)
+            for ln in rich_wrap(text, font, bold, W - 2 * M - indent)]
     return rows + [("", None, None, after, 0)]
 
 
@@ -118,16 +174,16 @@ pages, elapsed, spoken = [], 0, 0
 for n in sorted(SLIDES):
     name, secs, text, qa = SLIDES[n]
     elapsed += secs
-    est = round(len(re.sub(r"\s", "", text)) / SPEED)
+    est = round(len(re.sub(r"\s|\*\*", "", text)) / SPEED)
     spoken += est
     rows = []
     for sent in re.split(r"(?<=[.?!])\s+", text.strip()):
-        rows += paragraph(sent, f("Medium", 42), INK, 64, 14)
+        rows += paragraph(sent, f("Medium", 42), INK, 64, 14, bold=f("ExtraBold", 42), bold_color=BLUE)
     if qa:
         rows.append(("__qa__", None, None, 80, 0))
         for i, (q, ans) in enumerate(qa, 1):
             rows += paragraph(f"Q{i}. {q}", f("Bold", 33), VIOLET, 46, 2)
-            rows += paragraph(ans, f("Regular", 31), SUB, 43, 14, indent=26)
+            rows += paragraph(ans, f("Regular", 31), SUB, 43, 14, indent=26, bold=f("Bold", 31), bold_color=VIOLET)
 
     def new_page(first):
         page = Image.new("RGB", (W, H), BG)
@@ -155,12 +211,36 @@ for n in sorted(SLIDES):
             d.rounded_rectangle([M, y + 12, M + 200, y + 64], radius=26, fill=PALE)
             d.text((M + 26, y + 19), "예상 질문", font=f("Bold", 31), fill=VIOLET)
         elif txt:
-            d.text((M + ind, y), txt, font=font, fill=color)
+            x = M + ind
+            for s, fnt, col in txt:
+                d.text((x, y), s, font=fnt, fill=col)
+                x += d.textlength(s, font=fnt)
         y += lh
+    pages.append(page)
+
+# 부록: 발표하지 않는 장. 질문이 나오면 이 장으로 넘겨 보여 준다.
+for no, title, line, related in APPENDIX:
+    if not (PNG / f"slide{no:02d}.png").exists():
+        continue
+    page = Image.new("RGB", (W, H), BG)
+    d = ImageDraw.Draw(page)
+    d.text((M, 56), f"{no}p", font=f("ExtraBold", 44), fill=VIOLET)
+    d.text((M + 120, 62), title, font=f("SemiBold", 38), fill=SUB)
+    tag = "발표 안 함 · 질문용"
+    d.text((W - M - d.textlength(tag, font=f("Medium", 32)), 66), tag, font=f("Medium", 32), fill=MUTE)
+    shot = Image.open(PNG / f"slide{no:02d}.png").convert("RGB")
+    sw = W - 2 * M
+    shot = shot.resize((sw, int(shot.height * sw / shot.width)), Image.LANCZOS)
+    page.paste(shot, (M, 140))
+    d.rectangle([M, 140, M + sw, 140 + shot.height], outline=LINE, width=2)
+    y = 140 + shot.height + 50
+    for ln in wrap(line, f("SemiBold", 40), sw):
+        d.text((M, y), ln, font=f("SemiBold", 40), fill=INK); y += 60
+    d.text((M, y + 20), f"관련: {related}", font=f("Medium", 34), fill=MUTE)
     pages.append(page)
 
 out = HERE / "script_phone.pdf"
 pages[0].save(out, save_all=True, append_images=pages[1:], resolution=150)
 src = EDIT.name if EDIT.exists() else "build_deck.py"
-print(f"saved {out} · {len(pages)}쪽 (발표 {len(SLIDES)}장, 원본 {src}) · "
+print(f"saved {out} · {len(pages)}쪽 (발표 {len(SLIDES)}장 + 부록, 원본 {src}) · "
       f"목표 {elapsed // 60}분 {elapsed % 60}초 · 대본 예상 {spoken // 60}분 {spoken % 60}초")
